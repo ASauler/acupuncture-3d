@@ -499,19 +499,26 @@ function init() {
 // ===== LOAD BODY MODEL =====
 function buildBody() {
   const loader = new OBJLoader();
-  loader.load('model/corpo.obj', (obj) => {
+  loader.load('model/body.obj', (obj) => {
+    const skinMat = new THREE.MeshPhysicalMaterial({
+      color: 0xd4a574,
+      roughness: 0.55,
+      metalness: 0.02,
+      clearcoat: 0.15,
+      clearcoatRoughness: 0.4,
+      sheen: 0.3,
+      sheenRoughness: 0.6,
+      sheenColor: 0xffccaa,
+      side: THREE.DoubleSide
+    });
     obj.traverse(ch => {
       if (ch.isMesh) {
         ch.geometry.computeVertexNormals();
-        ch.material = new THREE.MeshPhongMaterial({
-          color: 0xd2b48c,
-          side: THREE.DoubleSide,
-          flatShading: false,
-          shininess: 30
-        });
+        ch.material = skinMat;
       }
     });
-    obj.position.y = -95;
+    obj.scale.set(95.3, 95.3, 95.3);
+    obj.position.y = -11.2;
     bodyMesh = obj;
     scene.add(obj);
     loading.classList.add('hide');
