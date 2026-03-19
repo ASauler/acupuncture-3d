@@ -1,0 +1,22 @@
+# Source APK/XAPK files
+*.xapk
+*.apk
+
+# Decompiled/extracted APK directories
+xapk-extracted/
+xapk-decompiled/
+apk-decompiled/
+
+# Original reference project (model already copied to /model)
+acu-master/
+
+# Debug/test screenshots
+*.png
+
+# Tool artifacts
+.omc/
+.playwright-mcp/
+.DS_Store
+
+# Claude Code
+.claude/
