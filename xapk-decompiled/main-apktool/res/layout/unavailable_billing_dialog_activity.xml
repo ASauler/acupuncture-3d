@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:gravity="center" android:orientation="vertical" android:background="#64000000" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:orientation="vertical" android:background="#ffffffff" android:paddingLeft="32.0dp" android:paddingTop="20.0dp" android:paddingRight="32.0dp" android:paddingBottom="20.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="12.0dp" android:layout_marginEnd="12.0dp" android:paddingHorizontal="32.0dp" android:paddingVertical="20.0dp">
+        <TextView android:textColor="#4a4a4a" android:gravity="center_horizontal" android:id="@id/text_view_unavailable_billing_error_message" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/sdk_unavailable_description_body" />
+        <LinearLayout android:gravity="center" android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20.0dp">
+            <Button android:textColor="#ffffffff" android:id="@id/button_close" android:background="@drawable/yellow_rounded_button_background" android:paddingLeft="12.0dp" android:paddingTop="8.0dp" android:paddingRight="12.0dp" android:paddingBottom="8.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/sdk_general_close_button" android:paddingHorizontal="12.0dp" android:paddingVertical="8.0dp" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

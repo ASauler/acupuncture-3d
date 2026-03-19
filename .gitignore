@@ -1,11 +1,5 @@
 # Source APK/XAPK files
 *.xapk
-*.apk
-
-# Decompiled/extracted APK directories
-xapk-extracted/
-xapk-decompiled/
-apk-decompiled/
 
 # Original reference project (model already copied to /model)
 acu-master/
@@ -20,3 +14,8 @@ acu-master/
 
 # Claude Code
 .claude/
+
+# Files over GitHub 100MB limit
+xapk-extracted/installTimeAssetsPack.apk
+xapk-extracted/config.arm64_v8a.apk
+xapk-decompiled/assets-apktool/assets/aa/Android/Android/prefab3localresource_assets_all_a2e71a73ebe8870963c34e1f9c670b04.bundle

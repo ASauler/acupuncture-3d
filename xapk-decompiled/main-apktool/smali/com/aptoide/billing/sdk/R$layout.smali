@@ -1,0 +1,33 @@
+.class public final Lcom/aptoide/billing/sdk/R$layout;
+.super Ljava/lang/Object;
+
+
+# annotations
+.annotation system Ldalvik/annotation/EnclosingClass;
+    value = Lcom/aptoide/billing/sdk/R;
+.end annotation
+
+.annotation system Ldalvik/annotation/InnerClass;
+    accessFlags = 0x19
+    name = "layout"
+.end annotation
+
+
+# static fields
+.field public static transparent_activity:I = 0x7f0b00ab
+
+.field public static unavailable_billing_dialog_activity:I = 0x7f0b00b6
+
+.field public static update_dialog_activity:I = 0x7f0b00b7
+
+.field public static web_payment_activity:I = 0x7f0b00b8
+
+
+# direct methods
+.method private constructor <init>()V
+    .locals 0
+
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    return-void
+.end method

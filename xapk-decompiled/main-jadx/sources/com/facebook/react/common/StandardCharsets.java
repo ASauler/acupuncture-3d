@@ -1,0 +1,16 @@
+package com.facebook.react.common;
+
+import com.bumptech.glide.load.Key;
+import java.nio.charset.Charset;
+
+/* JADX INFO: loaded from: classes.dex */
+@Deprecated(forRemoval = true, since = "Deprecated class since v0.73.0, please use java.nio.charset.StandardCharsets instead.")
+public final class StandardCharsets {
+    public static final Charset UTF_8 = Charset.forName(Key.STRING_CHARSET_NAME);
+    public static final Charset UTF_16 = Charset.forName("UTF-16");
+    public static final Charset UTF_16BE = Charset.forName("UTF-16BE");
+    public static final Charset UTF_16LE = Charset.forName("UTF-16LE");
+
+    private StandardCharsets() {
+    }
+}

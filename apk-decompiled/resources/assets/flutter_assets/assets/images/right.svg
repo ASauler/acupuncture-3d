@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="6px" height="11px" viewBox="0 0 6 11" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>路径</title>
+    <g id="1.0" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="全部经络" transform="translate(-350.000000, -81.000000)" fill="#FFFFFF" fill-rule="nonzero">
+            <polygon id="路径" transform="translate(350.500000, 86.500000) rotate(-315.000000) translate(-350.500000, -86.500000) " points="354 83 354 90 352.471762 88.4717619 352.444444 84.5555556 348.531672 84.5316722 347 83 351.845435 83 352.232769 83"></polygon>
+        </g>
+    </g>
+</svg>

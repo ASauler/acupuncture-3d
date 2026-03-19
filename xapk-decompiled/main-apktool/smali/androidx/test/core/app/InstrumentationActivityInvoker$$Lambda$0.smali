@@ -1,0 +1,47 @@
+.class final synthetic Landroidx/test/core/app/InstrumentationActivityInvoker$$Lambda$0;
+.super Ljava/lang/Object;
+.source "InstrumentationActivityInvoker.java"
+
+# interfaces
+.implements Ljava/lang/Runnable;
+
+
+# instance fields
+.field private final arg$1:Landroid/app/Activity;
+
+
+# direct methods
+.method private constructor <init>(Landroid/app/Activity;)V
+    .locals 0
+
+    .line 539
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    iput-object p1, p0, Landroidx/test/core/app/InstrumentationActivityInvoker$$Lambda$0;->arg$1:Landroid/app/Activity;
+
+    return-void
+.end method
+
+.method static get$Lambda(Landroid/app/Activity;)Ljava/lang/Runnable;
+    .locals 1
+
+    .line 539
+    new-instance v0, Landroidx/test/core/app/InstrumentationActivityInvoker$$Lambda$0;
+
+    invoke-direct {v0, p0}, Landroidx/test/core/app/InstrumentationActivityInvoker$$Lambda$0;-><init>(Landroid/app/Activity;)V
+
+    return-object v0
+.end method
+
+
+# virtual methods
+.method public run()V
+    .locals 1
+
+    .line 539
+    iget-object v0, p0, Landroidx/test/core/app/InstrumentationActivityInvoker$$Lambda$0;->arg$1:Landroid/app/Activity;
+
+    invoke-virtual {v0}, Landroid/app/Activity;->recreate()V
+
+    return-void
+.end method

@@ -1,0 +1,177 @@
+package androidx.camera.lifecycle;
+
+import android.content.Context;
+import androidx.arch.core.util.Function;
+import androidx.camera.core.Camera;
+import androidx.camera.core.CameraFilter;
+import androidx.camera.core.CameraInfo;
+import androidx.camera.core.CameraInfoUnavailableException;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.CameraX;
+import androidx.camera.core.CameraXConfig;
+import androidx.camera.core.UseCase;
+import androidx.camera.core.UseCaseGroup;
+import androidx.camera.core.ViewPort;
+import androidx.camera.core.impl.CameraConfig;
+import androidx.camera.core.impl.CameraInternal;
+import androidx.camera.core.impl.ExtendedCameraConfigProviderStore;
+import androidx.camera.core.impl.utils.ContextUtil;
+import androidx.camera.core.impl.utils.Threads;
+import androidx.camera.core.impl.utils.executor.CameraXExecutors;
+import androidx.camera.core.impl.utils.futures.Futures;
+import androidx.camera.core.internal.CameraUseCaseAdapter;
+import androidx.core.util.Preconditions;
+import androidx.lifecycle.LifecycleOwner;
+import com.google.common.util.concurrent.ListenableFuture;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+
+/* JADX INFO: loaded from: classes.dex */
+public final class ProcessCameraProvider implements LifecycleCameraProvider {
+    private static final ProcessCameraProvider sAppInstance = new ProcessCameraProvider();
+    private CameraX mCameraX;
+    private Context mContext;
+    private final LifecycleCameraRepository mLifecycleCameraRepository = new LifecycleCameraRepository();
+
+    public static ListenableFuture<ProcessCameraProvider> getInstance(final Context context) {
+        Preconditions.checkNotNull(context);
+        return Futures.transform(CameraX.getOrCreateInstance(context), new Function() { // from class: androidx.camera.lifecycle.ProcessCameraProvider$$ExternalSyntheticLambda0
+            @Override // androidx.arch.core.util.Function
+            public final Object apply(Object obj) {
+                return ProcessCameraProvider.lambda$getInstance$0(context, (CameraX) obj);
+            }
+        }, CameraXExecutors.directExecutor());
+    }
+
+    static /* synthetic */ ProcessCameraProvider lambda$getInstance$0(Context context, CameraX cameraX) {
+        ProcessCameraProvider processCameraProvider = sAppInstance;
+        processCameraProvider.setCameraX(cameraX);
+        processCameraProvider.setContext(ContextUtil.getApplicationContext(context));
+        return processCameraProvider;
+    }
+
+    public static void configureInstance(CameraXConfig cameraXConfig) {
+        CameraX.configureInstance(cameraXConfig);
+    }
+
+    public ListenableFuture<Void> shutdown() {
+        this.mLifecycleCameraRepository.clear();
+        return CameraX.shutdown();
+    }
+
+    private void setCameraX(CameraX cameraX) {
+        this.mCameraX = cameraX;
+    }
+
+    private void setContext(Context context) {
+        this.mContext = context;
+    }
+
+    public Camera bindToLifecycle(LifecycleOwner lifecycleOwner, CameraSelector cameraSelector, UseCase... useCaseArr) {
+        return bindToLifecycle(lifecycleOwner, cameraSelector, null, useCaseArr);
+    }
+
+    public Camera bindToLifecycle(LifecycleOwner lifecycleOwner, CameraSelector cameraSelector, UseCaseGroup useCaseGroup) {
+        return bindToLifecycle(lifecycleOwner, cameraSelector, useCaseGroup.getViewPort(), (UseCase[]) useCaseGroup.getUseCases().toArray(new UseCase[0]));
+    }
+
+    Camera bindToLifecycle(LifecycleOwner lifecycleOwner, CameraSelector cameraSelector, ViewPort viewPort, UseCase... useCaseArr) {
+        CameraConfig cameraConfig;
+        CameraConfig config;
+        Threads.checkMainThread();
+        CameraSelector.Builder builderFromSelector = CameraSelector.Builder.fromSelector(cameraSelector);
+        int length = useCaseArr.length;
+        int i = 0;
+        while (true) {
+            cameraConfig = null;
+            if (i >= length) {
+                break;
+            }
+            CameraSelector cameraSelector2 = useCaseArr[i].getCurrentConfig().getCameraSelector(null);
+            if (cameraSelector2 != null) {
+                Iterator<CameraFilter> it = cameraSelector2.getCameraFilterSet().iterator();
+                while (it.hasNext()) {
+                    builderFromSelector.addCameraFilter(it.next());
+                }
+            }
+            i++;
+        }
+        LinkedHashSet<CameraInternal> linkedHashSetFilter = builderFromSelector.build().filter(this.mCameraX.getCameraRepository().getCameras());
+        LifecycleCamera lifecycleCamera = this.mLifecycleCameraRepository.getLifecycleCamera(lifecycleOwner, CameraUseCaseAdapter.generateCameraId(linkedHashSetFilter));
+        Collection<LifecycleCamera> lifecycleCameras = this.mLifecycleCameraRepository.getLifecycleCameras();
+        for (UseCase useCase : useCaseArr) {
+            for (LifecycleCamera lifecycleCamera2 : lifecycleCameras) {
+                if (lifecycleCamera2.isBound(useCase) && lifecycleCamera2 != lifecycleCamera) {
+                    throw new IllegalStateException(String.format("Use case %s already bound to a different lifecycle.", useCase));
+                }
+            }
+        }
+        if (lifecycleCamera == null) {
+            lifecycleCamera = this.mLifecycleCameraRepository.createLifecycleCamera(lifecycleOwner, new CameraUseCaseAdapter(linkedHashSetFilter, this.mCameraX.getCameraDeviceSurfaceManager(), this.mCameraX.getDefaultConfigFactory()));
+        }
+        for (CameraFilter cameraFilter : cameraSelector.getCameraFilterSet()) {
+            if (cameraFilter.getIdentifier() != CameraFilter.DEFAULT_ID && (config = ExtendedCameraConfigProviderStore.getConfigProvider(cameraFilter.getIdentifier()).getConfig(lifecycleCamera.getCameraInfo(), this.mContext)) != null) {
+                if (cameraConfig != null) {
+                    throw new IllegalArgumentException("Cannot apply multiple extended camera configs at the same time.");
+                }
+                cameraConfig = config;
+            }
+        }
+        lifecycleCamera.setExtendedConfig(cameraConfig);
+        if (useCaseArr.length == 0) {
+            return lifecycleCamera;
+        }
+        this.mLifecycleCameraRepository.bindToLifecycleCamera(lifecycleCamera, viewPort, Arrays.asList(useCaseArr));
+        return lifecycleCamera;
+    }
+
+    @Override // androidx.camera.lifecycle.LifecycleCameraProvider
+    public boolean isBound(UseCase useCase) {
+        Iterator<LifecycleCamera> it = this.mLifecycleCameraRepository.getLifecycleCameras().iterator();
+        while (it.hasNext()) {
+            if (it.next().isBound(useCase)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override // androidx.camera.lifecycle.LifecycleCameraProvider
+    public void unbind(UseCase... useCaseArr) {
+        Threads.checkMainThread();
+        this.mLifecycleCameraRepository.unbind(Arrays.asList(useCaseArr));
+    }
+
+    @Override // androidx.camera.lifecycle.LifecycleCameraProvider
+    public void unbindAll() {
+        Threads.checkMainThread();
+        this.mLifecycleCameraRepository.unbindAll();
+    }
+
+    @Override // androidx.camera.core.CameraProvider
+    public boolean hasCamera(CameraSelector cameraSelector) throws CameraInfoUnavailableException {
+        try {
+            cameraSelector.select(this.mCameraX.getCameraRepository().getCameras());
+            return true;
+        } catch (IllegalArgumentException unused) {
+            return false;
+        }
+    }
+
+    @Override // androidx.camera.core.CameraProvider
+    public List<CameraInfo> getAvailableCameraInfos() {
+        ArrayList arrayList = new ArrayList();
+        Iterator<CameraInternal> it = this.mCameraX.getCameraRepository().getCameras().iterator();
+        while (it.hasNext()) {
+            arrayList.add(it.next().getCameraInfo());
+        }
+        return arrayList;
+    }
+
+    private ProcessCameraProvider() {
+    }
+}

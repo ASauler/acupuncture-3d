@@ -1,0 +1,28 @@
+package androidx.camera.core;
+
+import androidx.camera.core.impl.TagBundle;
+import androidx.camera.core.impl.utils.ExifData;
+
+/* JADX INFO: loaded from: classes.dex */
+abstract class ImmutableImageInfo implements ImageInfo {
+    @Override // androidx.camera.core.ImageInfo
+    public abstract int getRotationDegrees();
+
+    @Override // androidx.camera.core.ImageInfo
+    public abstract TagBundle getTagBundle();
+
+    @Override // androidx.camera.core.ImageInfo
+    public abstract long getTimestamp();
+
+    ImmutableImageInfo() {
+    }
+
+    public static ImageInfo create(TagBundle tagBundle, long j, int i) {
+        return new AutoValue_ImmutableImageInfo(tagBundle, j, i);
+    }
+
+    @Override // androidx.camera.core.ImageInfo
+    public void populateExifData(ExifData.Builder builder) {
+        builder.setOrientationDegrees(getRotationDegrees());
+    }
+}

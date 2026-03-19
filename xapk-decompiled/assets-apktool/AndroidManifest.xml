@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:dist="http://schemas.android.com/apk/distribution" android:compileSdkVersion="35" android:compileSdkVersionCodename="15" android:isFeatureSplit="true" package="com.vesal.jlsx.international" platformBuildVersionCode="35" platformBuildVersionName="15" split="installTimeAssetsPack">
+    <dist:module dist:type="asset-pack">
+        <dist:fusing dist:include="true"/>
+        <dist:delivery>
+            <dist:install-time/>
+        </dist:delivery>
+    </dist:module>
+    <application android:hasCode="false"/>
+</manifest>

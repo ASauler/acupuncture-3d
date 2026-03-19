@@ -1,0 +1,10 @@
+package com.google.android.gms.internal.p002firebaseauthapi;
+
+/* JADX INFO: compiled from: com.google.firebase:firebase-auth@@21.0.8 */
+/* JADX INFO: loaded from: classes3.dex */
+public final /* synthetic */ class zzho {
+    public static final /* synthetic */ zzho zza = new zzho();
+
+    private /* synthetic */ zzho() {
+    }
+}

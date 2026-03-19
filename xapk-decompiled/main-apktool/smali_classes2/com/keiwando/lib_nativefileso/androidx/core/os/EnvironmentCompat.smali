@@ -1,0 +1,83 @@
+.class public final Lcom/keiwando/lib_nativefileso/androidx/core/os/EnvironmentCompat;
+.super Ljava/lang/Object;
+.source "EnvironmentCompat.java"
+
+
+# static fields
+.field public static final MEDIA_UNKNOWN:Ljava/lang/String; = "unknown"
+
+.field private static final TAG:Ljava/lang/String; = "EnvironmentCompat"
+
+
+# direct methods
+.method private constructor <init>()V
+    .locals 0
+
+    .line 67
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    return-void
+.end method
+
+.method public static getStorageState(Ljava/io/File;)Ljava/lang/String;
+    .locals 2
+
+    .line 56
+    :try_start_0
+    invoke-virtual {p0}, Ljava/io/File;->getCanonicalPath()Ljava/lang/String;
+
+    move-result-object p0
+
+    .line 57
+    invoke-static {}, Landroid/os/Environment;->getExternalStorageDirectory()Ljava/io/File;
+
+    move-result-object v0
+
+    .line 58
+    invoke-virtual {v0}, Ljava/io/File;->getCanonicalPath()Ljava/lang/String;
+
+    move-result-object v0
+
+    .line 59
+    invoke-virtual {p0, v0}, Ljava/lang/String;->startsWith(Ljava/lang/String;)Z
+
+    move-result p0
+
+    if-eqz p0, :cond_0
+
+    .line 60
+    invoke-static {}, Landroid/os/Environment;->getExternalStorageState()Ljava/lang/String;
+
+    move-result-object p0
+    :try_end_0
+    .catch Ljava/io/IOException; {:try_start_0 .. :try_end_0} :catch_0
+
+    return-object p0
+
+    :catch_0
+    move-exception p0
+
+    .line 63
+    new-instance v0, Ljava/lang/StringBuilder;
+
+    const-string v1, "Failed to resolve canonical path: "
+
+    invoke-direct {v0, v1}, Ljava/lang/StringBuilder;-><init>(Ljava/lang/String;)V
+
+    invoke-virtual {v0, p0}, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+
+    move-result-object p0
+
+    invoke-virtual {p0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+
+    move-result-object p0
+
+    const-string v0, "EnvironmentCompat"
+
+    invoke-static {v0, p0}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
+
+    :cond_0
+    const-string p0, "unknown"
+
+    return-object p0
+.end method
