@@ -1631,17 +1631,24 @@ function animate() {
     const hw = innerWidth / 2, hh = innerHeight / 2;
     const camPos = camera.position;
     const proj = new THREE.Vector3();
-    const outward = new THREE.Vector3();
-    const viewDir = new THREE.Vector3();
+    const rayTarget = new THREE.Vector3();
+    const rayDir = new THREE.Vector3();
     // Collect visible label positions, then draw with overlap avoidance
     const labels = [];
+    const savedFar = raycaster.far;
     pointMeshes.forEach(mesh => {
       if (!mesh.visible) return;
       const pt = mesh.userData;
       if (!pt || pt.m !== labelMeridian) return;
-      outward.set(pt.x, 0, pt.z).normalize();
-      viewDir.set(pt.x - camPos.x, pt.y - camPos.y, pt.z - camPos.z).normalize();
-      if (outward.dot(viewDir) > 0.1) return;
+      // Occlusion: raycast from camera to point, check if body blocks it
+      if (bodyMesh) {
+        rayTarget.set(pt.x, pt.y, pt.z);
+        const ptDist = camPos.distanceTo(rayTarget);
+        rayDir.subVectors(rayTarget, camPos).normalize();
+        raycaster.set(camPos, rayDir);
+        raycaster.far = ptDist - 1;
+        if (raycaster.intersectObject(bodyMesh, true).length > 0) return;
+      }
       proj.set(pt.x, pt.y, pt.z).project(camera);
       if (proj.z > 1 || proj.z < -1) return;
       const sx = proj.x * hw + hw;
@@ -1649,6 +1656,7 @@ function animate() {
       if (sx < -30 || sx > innerWidth + 30 || sy < -10 || sy > innerHeight + 10) return;
       labels.push({ pt, sx, sy });
     });
+    raycaster.far = savedFar;
 
     // Sort by screen-Y so overlap nudging works top-down
     labels.sort((a, b) => a.sy - b.sy);
