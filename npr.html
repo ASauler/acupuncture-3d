@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>望 · 经络图谱 · 3渲2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Noto Serif SC","Source Han Serif SC","PingFang SC",serif;background:#F5F0E6;color:#1A1A1A;overflow:hidden;height:100vh}
+/* Ink-wash mountain silhouette — replaced by 3D skybox */
+/* Paper grain overlay */
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;mix-blend-mode:multiply;opacity:0.04;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")}
+#loading{position:fixed;inset:0;background:#F5F0E8;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;transition:opacity .8s}
+#loading.hide{opacity:0;pointer-events:none}
+#loading .ring{width:56px;height:56px;border:2px solid #E0E0E0;border-top-color:#C8A058;border-radius:50%;animation:spin .8s linear infinite}
+#loading p{margin-top:16px;color:#777;font-size:13px;letter-spacing:2px}
+#loading .progress-bar{width:200px;height:2px;background:#E0E0E0;border-radius:2px;margin-top:10px;overflow:hidden}
+#loading .progress-fill{height:100%;width:0%;background:#C8A058;transition:width .3s}
+@keyframes spin{to{transform:rotate(360deg)}}
+canvas{display:block}
+#topbar{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;padding:0 16px;background:linear-gradient(180deg,rgba(242,239,234,.96),rgba(242,239,234,0));z-index:10;pointer-events:none}
+#topbar h1{font-size:17px;font-weight:600;color:#1A1A1A;pointer-events:auto;letter-spacing:2px}
+#topbar h1 span{color:#C8A058}
+.controls{margin-left:auto;display:flex;gap:6px;pointer-events:auto}
+.controls button{background:#FFFFFF;border:1px solid #E0E0E0;color:#444;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;transition:all .2s;font-family:inherit}
+.controls button:hover,.controls button.active{background:rgba(200,160,88,.08);border-color:#C8A058;color:#C8A058}
+#search-box{position:fixed;top:56px;left:16px;z-index:10;display:flex;gap:6px;align-items:center}
+#search-input{background:#FFFFFF;border:1px solid #E0E0E0;color:#1A1A1A;padding:6px 12px;border-radius:8px;font-size:13px;width:200px;outline:none;font-family:inherit}
+#search-input:focus{border-color:#C8A058}
+#search-input::placeholder{color:#AAA}
+#search-results{position:fixed;top:86px;left:16px;background:#FFFFFF;border:1px solid #E0E0E0;border-radius:10px;max-height:300px;overflow-y:auto;z-index:15;display:none;min-width:260px;box-shadow:0 4px 20px rgba(0,0,0,.06)}
+#search-results.show{display:block}
+.sr-item{padding:8px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid #F2F2F2;display:flex;align-items:center;gap:8px}
+.sr-item:hover{background:rgba(200,160,88,.04)}
+.sr-item .sr-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sr-item .sr-name{font-weight:500;color:#1A1A1A}
+.sr-item .sr-code{color:#777;font-size:11px;margin-left:auto}
+#mtabs{position:fixed;top:56px;left:230px;display:flex;gap:4px;z-index:10;flex-wrap:wrap;max-width:calc(100vw - 260px);padding:4px 0}
+.mt{padding:4px 10px;border-radius:16px;font-size:11px;cursor:pointer;border:1px solid #E0E0E0;background:#FFFFFF;transition:all .2s;white-space:nowrap;color:#777;font-family:inherit}
+.mt:hover{border-color:#AAA;color:#444}
+.mt.active{color:#fff;border-color:var(--mc);background:var(--mc)}
+/* Meridian tab info banner */
+.mt-info-banner{position:fixed;top:90px;left:230px;background:#FFFFFF;border:1px solid #E0E0E0;border-radius:10px;padding:8px 14px;z-index:11;box-shadow:0 4px 20px rgba(0,0,0,.06);font-size:12px;display:none;max-width:350px}
+.mt-info-banner.show{display:block}
+.mt-info-banner .mib-name{color:#1A1A1A;font-weight:600;font-size:13px}
+.mt-info-banner .mib-count{color:#777;margin-left:8px}
+.mt-info-banner .mib-link{color:#C8A058;cursor:pointer;margin-left:10px;text-decoration:underline}
+/* Panel */
+#panel{position:fixed;top:0;right:0;width:360px;height:100vh;background:#FFFFFF;border-left:1px solid #E0E0E0;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:20;overflow-y:auto;padding:20px}
+#panel.open{transform:translateX(0)}
+#panel::-webkit-scrollbar{width:3px}
+#panel::-webkit-scrollbar-thumb{background:#DDD;border-radius:3px}
+.close-btn{position:absolute;top:12px;right:12px;background:none;border:none;color:#AAA;font-size:20px;cursor:pointer;padding:4px 8px}
+.close-btn:hover{color:#1A1A1A}
+.pn{font-size:22px;font-weight:700;margin-bottom:2px}
+.pp{font-size:13px;color:#777}
+.pm{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;margin-top:6px}
+.ps{margin-top:16px}
+.ps h3{font-size:12px;letter-spacing:2px;color:#777;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid #F2F2F2}
+.ps p,.ps li{font-size:13px;line-height:1.8;color:#444}
+.ps ul{list-style:none}
+.ps li{padding-left:10px;position:relative}
+.ps li::before{content:"";position:absolute;left:0;top:10px;width:3px;height:3px;border-radius:50%;background:#C8A058}
+.rp{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.rp span{padding:3px 8px;border-radius:6px;font-size:11px;background:#F7F7F7;border:1px solid #E0E0E0;cursor:pointer;transition:all .2s;color:#444}
+.rp span:hover{border-color:#C8A058;color:#C8A058}
+.fav-btn{background:none;border:1px solid #E0E0E0;color:#777;padding:4px 12px;border-radius:8px;cursor:pointer;font-size:13px;transition:all .2s;margin-left:8px}
+.fav-btn:hover{border-color:#C8A058;color:#C8A058}
+.fav-btn.active{color:#C8A058;border-color:#C8A058}
+#tooltip{position:fixed;padding:5px 10px;background:#FFFFFF;border:1px solid #E0E0E0;border-radius:6px;font-size:12px;color:#1A1A1A;pointer-events:none;z-index:30;opacity:0;transition:opacity .12s;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+#tooltip.show{opacity:1}
+#bottom-bar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:10}
+#bottom-bar button{background:#FFFFFF;border:1px solid #E0E0E0;color:#444;padding:8px 16px;border-radius:10px;font-size:12px;cursor:pointer;transition:all .2s;font-family:inherit}
+#bottom-bar button:hover{background:rgba(200,160,88,.08);border-color:#C8A058;color:#C8A058}
+#hint{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);color:#AAA;font-size:12px;transition:opacity 2s;pointer-events:none;letter-spacing:1px}
+/* Meridian Detail Modal */
+#circ-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(4px);z-index:50;display:none;align-items:center;justify-content:center}
+#circ-overlay.open{display:flex}
+#circ-modal{background:#FFFFFF;border:1px solid #E0E0E0;border-radius:14px;width:90vw;max-width:920px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.1)}
+#circ-header{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #F2F2F2}
+#circ-header h2{font-size:15px;font-weight:600;flex:1;letter-spacing:1px}
+.circ-close{background:none;border:none;color:#AAA;font-size:20px;cursor:pointer}
+.circ-close:hover{color:#1A1A1A}
+#circ-body{display:flex;flex:1;overflow:hidden}
+#circ-list{width:180px;overflow-y:auto;border-right:1px solid #F2F2F2;padding:8px 0;flex-shrink:0}
+#circ-list::-webkit-scrollbar{width:3px}
+#circ-list::-webkit-scrollbar-thumb{background:#DDD;border-radius:3px}
+.ci{padding:8px 14px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:8px;transition:background .15s;color:#777}
+.ci:hover{background:#F7F7F7}
+.ci.active{background:rgba(200,160,88,.06);color:#C8A058}
+.ci .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+#circ-view{flex:1;padding:20px;overflow-y:auto;line-height:1.9;color:#444;font-size:13px}
+#circ-view::-webkit-scrollbar{width:3px}
+#circ-view::-webkit-scrollbar-thumb{background:#DDD;border-radius:3px}
+#circ-view h3{color:#1A1A1A;font-size:15px;margin-bottom:10px}
+#circ-view h4{color:#C8A058;font-size:13px;margin:14px 0 6px;padding-bottom:4px;border-bottom:1px solid #F2F2F2}
+#circ-view .gj-section{color:#444;white-space:pre-wrap;font-size:12px;line-height:1.8;margin-top:4px}
+/* Favorites Panel */
+#fav-panel{position:fixed;top:0;left:0;width:320px;height:100vh;background:#FFFFFF;border-right:1px solid #E0E0E0;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:25;overflow-y:auto;padding:20px}
+#fav-panel.open{transform:translateX(0)}
+#fav-panel::-webkit-scrollbar{width:3px}
+#fav-panel::-webkit-scrollbar-thumb{background:#DDD;border-radius:3px}
+#fav-panel h2{font-size:16px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.fav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:background .15s;border-bottom:1px solid #F2F2F2}
+.fav-item:hover{background:rgba(200,160,88,.04)}
+.fav-item .fav-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.fav-item .fav-name{font-size:13px;font-weight:500;color:#1A1A1A;flex:1}
+.fav-item .fav-code{font-size:11px;color:#777}
+.fav-item .fav-remove{background:none;border:none;color:#AAA;font-size:16px;cursor:pointer;padding:0 4px}
+.fav-item .fav-remove:hover{color:#C8A058}
+.fav-empty{color:#AAA;font-size:13px;text-align:center;padding:40px 0}
+/* Extra Points Modal */
+#extra-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(4px);z-index:50;display:none;align-items:center;justify-content:center}
+#extra-overlay.open{display:flex}
+#extra-modal{background:#FFFFFF;border:1px solid #E0E0E0;border-radius:14px;width:90vw;max-width:700px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.1)}
+#extra-modal .em-header{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #F2F2F2;gap:12px}
+#extra-modal .em-header h2{font-size:15px;font-weight:600;flex:1;letter-spacing:1px}
+#extra-search{background:#F7F7F7;border:1px solid #E0E0E0;color:#1A1A1A;padding:5px 10px;border-radius:6px;font-size:12px;width:160px;outline:none;font-family:inherit}
+#extra-search:focus{border-color:#C8A058}
+#extra-list{flex:1;overflow-y:auto;padding:8px 18px}
+#extra-list::-webkit-scrollbar{width:3px}
+#extra-list::-webkit-scrollbar-thumb{background:#DDD;border-radius:3px}
+.extra-item{padding:12px 0;border-bottom:1px solid #F2F2F2}
+.extra-item .ei-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.extra-item .ei-code{color:#C8A058;font-size:12px;font-weight:600}
+.extra-item .ei-name{color:#1A1A1A;font-size:14px;font-weight:500}
+.extra-item .ei-detail{font-size:12px;color:#444;line-height:1.7}
+.extra-item .ei-detail strong{color:#1A1A1A}
+/* Exam Mode */
+#exam-overlay{position:fixed;inset:0;z-index:45;display:none;pointer-events:none}
+#exam-overlay.open{display:block}
+#exam-bar{position:fixed;top:0;left:0;right:0;padding:12px 20px;background:linear-gradient(180deg,rgba(242,239,234,.98),rgba(242,239,234,.85));z-index:46;display:flex;align-items:center;gap:16px;pointer-events:auto;border-bottom:1px solid #E0E0E0}
+#exam-bar .eq-question{flex:1;font-size:16px;font-weight:600;color:#1A1A1A}
+#exam-bar .eq-score{font-size:14px;color:#C8A058;font-weight:600}
+#exam-bar .eq-progress{font-size:12px;color:#777}
+#exam-bar .eq-exit{background:rgba(200,160,88,.08);border:1px solid rgba(200,160,88,.3);color:#C8A058;padding:5px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit}
+#exam-bar .eq-exit:hover{background:rgba(200,160,88,.15)}
+#exam-result{position:fixed;inset:0;background:rgba(242,239,234,.96);z-index:47;display:none;align-items:center;justify-content:center;flex-direction:column;pointer-events:auto}
+#exam-result.show{display:flex}
+#exam-result .er-score{font-size:64px;font-weight:800;color:#C8A058}
+#exam-result .er-label{font-size:18px;color:#777;margin-top:8px;letter-spacing:2px}
+#exam-result .er-btn{margin-top:30px;background:rgba(200,160,88,.08);border:1px solid #C8A058;color:#C8A058;padding:10px 30px;border-radius:10px;font-size:14px;cursor:pointer;font-family:inherit}
+#exam-result .er-btn:hover{background:rgba(200,160,88,.15)}
+.exam-flash{position:fixed;inset:0;z-index:44;pointer-events:none;opacity:0;transition:opacity .3s}
+.exam-flash.green{background:rgba(45,138,78,.12);opacity:1}
+.exam-flash.red{background:rgba(200,160,88,.12);opacity:1}
+/* Ziwu Liuzhu (Hourly Flow) */
+#ziwu-indicator{position:fixed;bottom:20px;left:20px;background:#FFFFFF;border:1px solid #E0E0E0;border-radius:12px;padding:8px 14px;z-index:10;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+#ziwu-indicator:hover{border-color:#C8A058}
+#ziwu-indicator .zi-dot{width:10px;height:10px;border-radius:50%;animation:pulse-zi 2s ease-in-out infinite}
+@keyframes pulse-zi{0%,100%{opacity:1}50%{opacity:.4}}
+#ziwu-indicator .zi-text{font-size:12px;color:#444}
+#ziwu-indicator .zi-time{font-size:10px;color:#777}
+#ziwu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(4px);z-index:50;display:none;align-items:center;justify-content:center}
+#ziwu-overlay.open{display:flex}
+#ziwu-modal{background:#FFFFFF;border:1px solid #E0E0E0;border-radius:14px;width:90vw;max-width:560px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.1)}
+#ziwu-modal .zm-header{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #F2F2F2}
+#ziwu-modal .zm-header h2{font-size:15px;font-weight:600;flex:1;letter-spacing:1px}
+#ziwu-modal .zm-body{padding:20px;overflow-y:auto}
+.ziwu-table{width:100%;border-collapse:collapse}
+.ziwu-table td,.ziwu-table th{padding:10px 12px;font-size:13px;border-bottom:1px solid #F2F2F2;text-align:left}
+.ziwu-table th{color:#777;font-weight:500;font-size:11px;letter-spacing:1px}
+.ziwu-table tr.active-row{background:rgba(200,160,88,.06)}
+.ziwu-table .zt-time{color:#777;font-size:12px;white-space:nowrap}
+.ziwu-table .zt-name{color:#1A1A1A;font-weight:500}
+.ziwu-table .zt-organ{color:#444}
+.ziwu-table .zt-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px}
+@media(max-width:700px){
+  #panel{width:100%}
+  #fav-panel{width:100%}
+  #mtabs{left:16px;top:86px;max-width:calc(100vw - 32px)}
+  #search-box{top:56px}
+  #circ-list{width:120px}
+  .mt-info-banner{left:16px;top:120px}
+  #ziwu-indicator{bottom:70px}
+}
+</style>
+</head>
+<body>
+<div id="loading"><div class="ring"></div><p>加载中...</p><div class="progress-bar"><div class="progress-fill" id="load-progress"></div></div></div>
+<div id="topbar">
+  <h1><span>望</span> · 经络</h1>
+  <div class="controls">
+    <button id="btn-circ">经络详情</button>
+    <button id="btn-extra">奇穴</button>
+    <button id="btn-exam">考试</button>
+    <button id="btn-fav">收藏</button>
+    <button id="btn-flow">循行</button>
+    <button id="btn-mode-bm" class="active">白描</button>
+    <button id="btn-mode-xs">写实</button>
+    <button id="btn-mode-ts">透视</button>
+    <button id="btn-rot">自转</button>
+  </div>
+</div>
+<div id="search-box"><input id="search-input" placeholder="搜索穴位 名称/拼音/编码..." autocomplete="off"></div>
+<div id="search-results"></div>
+<div id="mtabs"></div>
+<div class="mt-info-banner" id="mt-info-banner"></div>
+<div id="panel"><button class="close-btn" onclick="closePanel()">&times;</button><div id="pc"></div></div>
+<div id="tooltip"></div>
+<div id="bottom-bar"><button onclick="resetCamera()">重置视角</button></div>
+<div id="hint">拖拽旋转 · 滚轮缩放 · 点击穴位查看详情</div>
+<!-- Favorites Panel -->
+<div id="fav-panel"><h2>收藏夹 <button class="close-btn" onclick="closeFav()" style="position:static;font-size:18px">&times;</button></h2><div id="fav-list"></div></div>
+<!-- Meridian Detail Modal -->
+<div id="circ-overlay">
+  <div id="circ-modal">
+    <div id="circ-header"><h2>经络详情</h2><button class="circ-close" onclick="closeCirc()">&times;</button></div>
+    <div id="circ-body"><div id="circ-list"></div><div id="circ-view"></div></div>
+  </div>
+</div>
+<!-- Extra Points Modal -->
+<div id="extra-overlay">
+  <div id="extra-modal">
+    <div class="em-header"><h2>经外奇穴</h2><input id="extra-search" placeholder="搜索奇穴..." autocomplete="off"><button class="circ-close" onclick="closeExtra()">&times;</button></div>
+    <div id="extra-list"></div>
+  </div>
+</div>
+<!-- Ziwu Liuzhu -->
+<div id="ziwu-indicator"><span class="zi-dot"></span><span class="zi-text"></span><span class="zi-time"></span></div>
+<div id="ziwu-overlay">
+  <div id="ziwu-modal">
+    <div class="zm-header"><h2>子午流注</h2><button class="circ-close" onclick="closeZiwu()">&times;</button></div>
+    <div class="zm-body" id="ziwu-body"></div>
+  </div>
+</div>
+<!-- Exam Mode -->
+<div id="exam-overlay"><div id="exam-bar"><span class="eq-question"></span><span class="eq-score"></span><span class="eq-progress"></span><button class="eq-exit" onclick="exitExam()">退出考试</button></div></div>
+<div id="exam-result"><div class="er-score"></div><div class="er-label">最终得分</div><button class="er-btn" onclick="exitExam()">返回</button></div>
+<div class="exam-flash" id="exam-flash"></div>
+
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {DRACOLoader} from 'three/addons/loaders/DRACOLoader.js';
+import {mergeVertices} from 'three/addons/utils/BufferGeometryUtils.js';
+
+// ===== MERIDIAN CONFIG =====
+const M={
+  // 五行配色 — 水墨画矿物色
+  LU:{name:'肺经',full:'手太阴肺经',color:0xB8A078,css:'#B8A078'},     // 金·淡金
+  LI:{name:'大肠经',full:'手阳明大肠经',color:0xA89068,css:'#A89068'}, // 金·暗金
+  ST:{name:'胃经',full:'足阳明胃经',color:0x8A7050,css:'#8A7050'},     // 土·赭石
+  SP:{name:'脾经',full:'足太阴脾经',color:0x7A6848,css:'#7A6848'},     // 土·泥褐
+  HT:{name:'心经',full:'手少阴心经',color:0xA03020,css:'#A03020'},     // 火·朱砂
+  SI:{name:'小肠经',full:'手太阳小肠经',color:0x904028,css:'#904028'}, // 火·暗朱
+  BL:{name:'膀胱经',full:'足太阳膀胱经',color:0x3A3A45,css:'#3A3A45'}, // 水·浓墨
+  KI:{name:'肾经',full:'足少阴肾经',color:0x2E2E3A,css:'#2E2E3A'},     // 水·深墨
+  PC:{name:'心包经',full:'手厥阴心包经',color:0x8A4030,css:'#8A4030'}, // 相火·褐朱
+  TE:{name:'三焦经',full:'手少阳三焦经',color:0x7A3828,css:'#7A3828'}, // 相火·暗褐
+  GB:{name:'胆经',full:'足少阳胆经',color:0x4A5A4A,css:'#4A5A4A'},     // 木·墨绿
+  LR:{name:'肝经',full:'足厥阴肝经',color:0x3A4A38,css:'#3A4A38'},     // 木·松烟
+  DU:{name:'督脉',full:'督脉',color:0x2A2520,css:'#2A2520'},           // 奇经·焦墨
+  RN:{name:'任脉',full:'任脉',color:0x35302A,css:'#35302A'}            // 奇经·浓墨
+};
+
+// ===== 3D POSITION DATA =====
+
+const POS={
+// RN 任脉 24穴
+RN1:[0,0.07,-16.03,-8.32],RN2:[0,0.03,-10.37,0.73],RN3:[0,0.06,-7.08,1.22],RN4:[0,0.06,-3.86,1.94],RN5:[0,0.04,-0.55,2.57],RN6:[0,0.06,1.09,2.81],RN7:[0,0.03,2.72,3.04],RN8:[0,0.02,6.05,3.39],RN9:[0,0.04,8.5,3.25],RN10:[0,0.04,10.93,3.18],RN11:[0,0.03,13.44,3.25],RN12:[0,0.02,15.82,3.53],RN13:[0,0.02,18.31,3.63],RN14:[0,-0.02,20.77,3.65],RN15:[0,0.04,23.15,3.55],RN16:[0,-0.01,25.76,3.43],RN17:[0,0.01,29.94,3.16],RN18:[0,-0.0,32.74,2.48],RN19:[0,0.01,36.14,1.25],RN20:[0,0.01,37.88,0.35],RN21:[0,0.04,39.55,-0.59],RN22:[0,0.03,42.2,-2.16],RN23:[0,0.05,50.28,-1.15],RN24:[0,-0.01,53.25,2.45],
+// LU 肺经 11穴
+LU1:[-1,12.72,39.74,-3.22],LU2:[-1,12.52,42.44,-5.57],LU3:[-1,24.83,25.13,-8.18],LU4:[-1,25.39,23.17,-8.06],LU5:[-1,27.09,13.6,-8.0],LU6:[-1,30.78,5.29,-4.95],LU7:[-1,37.47,-4.17,-3.08],LU8:[-1,36.64,-4.6,-1.63],LU9:[-1,37.73,-6.2,-0.63],LU10:[-1,39.97,-7.92,1.62],LU11:[-1,43.0,-11.26,5.24],
+// LI 大肠经 20穴
+LI1:[-1,44.35,-17.75,3.18],LI2:[-1,42.5,-12.92,1.08],LI3:[-1,41.66,-11.74,0.45],LI4:[-1,40.89,-10.04,-0.29],LI5:[-1,39.16,-6.93,-1.81],LI6:[-1,36.03,-1.06,-4.87],LI7:[-1,34.43,2.68,-6.13],LI8:[-1,32.59,7.82,-8.24],LI9:[-1,31.89,9.53,-8.96],LI10:[-1,31.06,11.1,-9.7],LI11:[-1,28.65,14.49,-11.42],LI12:[-1,27.43,16.22,-11.53],LI13:[-1,26.32,19.94,-11.41],LI14:[-1,23.13,29.07,-9.76],LI15:[-1,18.07,43.58,-8.8],LI16:[-1,14.77,45.11,-12.62],LI17:[-1,5.2,47.01,-6.1],LI18:[-1,4.93,50.45,-6.09],LI19:[-1,-0.92,56.67,2.95],LI20:[-1,-1.99,57.55,2.22],
+// ST 胃经 45穴
+ST1:[-1,2.97,60.45,1.5],ST2:[-1,2.94,59.26,1.7],ST3:[-1,2.91,57.16,1.82],ST4:[-1,3.35,54.7,1.57],ST5:[-1,4.22,52.58,-1.27],ST6:[-1,5.62,54.52,-3.94],ST7:[-1,6.51,58.56,-5.94],ST8:[-1,5.58,68.46,-2.32],ST9:[-1,2.16,48.79,-3.51],ST10:[-1,1.96,46.83,-3.51],ST11:[-1,1.99,42.53,-1.6],ST12:[-1,8.23,43.74,-4.76],ST13:[-1,8.55,41.84,-2.64],ST14:[-1,8.8,39.74,-1.23],ST15:[-1,9.39,36.43,0.62],ST16:[-1,9.96,33.01,2.04],ST17:[-1,10.51,29.44,3.45],ST18:[-1,10.34,25.79,2.74],ST19:[-1,5.35,20.79,3.9],ST20:[-1,5.35,18.41,3.76],ST21:[-1,5.35,15.98,3.87],ST22:[-1,5.35,13.43,3.3],ST23:[-1,5.35,10.88,3.17],ST24:[-1,5.35,8.55,3.43],ST25:[-1,5.35,5.95,2.79],ST26:[-1,5.35,2.77,2.52],ST27:[-1,5.35,-0.8,1.88],ST28:[-1,5.35,-3.96,1.33],ST29:[-1,5.35,-7.24,0.6],ST30:[-1,5.37,-10.44,0.54],ST31:[-1,11.35,-12.35,-0.65],ST32:[-1,10.05,-35.56,0.16],ST33:[-1,9.36,-41.87,-1.28],ST34:[-1,8.96,-44.03,-2.19],ST35:[-1,8.29,-51.55,-3.84],ST36:[-1,8.05,-58.52,-4.53],ST37:[-1,7.74,-64.87,-4.87],ST38:[-1,7.67,-69.53,-5.6],ST39:[-1,7.5,-71.67,-5.89],ST40:[-1,9.2,-69.43,-6.77],ST41:[-1,5.96,-85.25,-5.89],ST42:[-1,5.6,-86.95,-3.22],ST43:[-1,6.15,-88.85,0.03],ST44:[-1,6.33,-90.96,3.56],ST45:[-1,6.21,-91.52,6.77],
+// SP 脾经 21穴
+SP1:[-1,3.44,-91.1,5.81],SP2:[-1,2.6,-91.84,3.28],SP3:[-1,2.25,-91.36,1.09],SP4:[-1,2.53,-90.22,-1.85],SP5:[-1,2.11,-87.11,-7.74],SP6:[-1,3.08,-79.03,-10.17],SP7:[-1,2.36,-71.95,-9.96],SP8:[-1,1.07,-62.58,-10.51],SP9:[-1,1.84,-56.18,-9.53],SP10:[-1,5.22,-44.08,-2.08],SP11:[-1,5.78,-23.26,0.4],SP12:[-1,7.65,-10.33,-0.15],SP13:[-1,9.6,-8.27,-0.36],SP14:[-1,9.96,2.02,0.45],SP15:[-1,10.07,6.5,0.65],SP16:[-1,10.28,13.84,1.29],SP17:[-1,13.29,26.16,-1.31],SP18:[-1,14.04,29.45,-0.22],SP19:[-1,13.43,33.81,-0.49],SP20:[-1,12.83,37.44,-1.73],SP21:[-1,14.65,26.55,-6.73],
+// HT 心经 9穴
+HT1:[-1,16.42,31.74,-7.12],HT2:[-1,20.7,18.18,-7.68],HT3:[-1,22.89,12.55,-9.42],HT4:[-1,33.16,-5.59,-3.18],HT5:[-1,33.53,-6.25,-2.88],HT6:[-1,34.12,-7.11,-2.24],HT7:[-1,34.7,-7.9,-1.53],HT8:[-1,37.15,-13.98,-0.37],HT9:[-1,37.31,-19.65,-0.48],
+// SI 小肠经 19穴
+SI1:[-1,36.56,-20.04,-0.63],SI2:[-1,36.23,-16.12,-1.97],SI3:[-1,35.54,-13.64,-2.43],SI4:[-1,35.15,-10.45,-3.19],SI5:[-1,34.77,-8.79,-3.66],SI6:[-1,36.08,-6.31,-4.94],SI7:[-1,30.12,0.07,-9.61],SI8:[-1,22.92,12.98,-14.21],SI9:[-1,16.32,35.2,-16.51],SI10:[-1,14.95,41.86,-15.14],SI11:[-1,10.52,38.32,-17.62],SI12:[-1,11.24,42.36,-16.01],SI13:[-1,6.64,41.74,-17.09],SI14:[-1,5.73,43.92,-16.16],SI15:[-1,3.89,45.5,-15.44],SI16:[-1,5.28,51.52,-7.57],SI17:[-1,5.07,53.29,-6.23],SI18:[-1,4.83,57.54,0.37],SI19:[-1,6.69,59.62,-6.86],
+// BL 膀胱经 67穴
+BL1:[-1,1.32,61.5,1.75],BL2:[-1,1.15,63.68,2.42],BL3:[-1,1.13,70.82,-0.88],BL4:[-1,2.45,70.57,-1.12],BL5:[-1,2.54,71.06,-2.03],BL6:[-1,2.6,72.27,-6.04],BL7:[-1,2.64,72.23,-10.41],BL8:[-1,2.62,69.96,-14.52],BL9:[-1,2.3,59.7,-15.65],BL10:[-1,2.13,54.49,-13.11],BL11:[-1,3.06,43.57,-16.12],BL12:[-1,3.06,41.39,-17.05],BL13:[-1,2.99,38.93,-17.91],BL14:[-1,2.93,36.6,-18.34],BL15:[-1,2.94,33.29,-18.65],BL16:[-1,2.9,30.03,-18.51],BL17:[-1,2.9,27.55,-18.36],BL18:[-1,2.87,22.5,-17.41],BL19:[-1,2.82,20.14,-16.78],BL20:[-1,2.87,17.24,-16.02],BL21:[-1,2.87,15.03,-15.67],BL22:[-1,2.84,12.34,-15.48],BL23:[-1,2.84,9.7,-15.41],BL24:[-1,2.83,6.99,-15.49],BL25:[-1,2.98,3.14,-16.13],BL26:[-1,3.05,-0.08,-16.57],BL27:[-1,2.99,-2.36,-17.15],BL28:[-1,2.84,-4.38,-17.95],BL29:[-1,2.84,-6.58,-18.71],BL30:[-1,2.84,-8.33,-18.93],BL31:[-1,1.98,-2.39,-17.05],BL32:[-1,1.91,-4.38,-17.72],BL33:[-1,1.69,-6.61,-18.36],BL34:[-1,1.56,-8.33,-18.47],BL35:[-1,0.87,-12.39,-17.04],BL36:[-1,7.01,-18.92,-14.73],BL37:[-1,6.65,-33.06,-13.87],BL38:[-1,9.16,-49.19,-11.4],BL39:[-1,8.96,-51.23,-11.88],BL40:[-1,6.44,-51.28,-12.78],BL41:[-1,5.93,41.6,-17.13],BL42:[-1,6.04,39.05,-18.01],BL43:[-1,6.08,36.58,-18.56],BL44:[-1,5.99,33.26,-18.77],BL45:[-1,6.01,30.05,-18.72],BL46:[-1,6.09,27.49,-18.36],BL47:[-1,5.99,22.57,-17.41],BL48:[-1,5.99,20.11,-16.8],BL49:[-1,5.98,17.18,-16.1],BL50:[-1,6.04,14.98,-15.59],BL51:[-1,5.97,12.36,-15.07],BL52:[-1,5.95,9.73,-14.82],BL53:[-1,5.82,-4.36,-18.15],BL54:[-1,5.84,-8.28,-19.14],BL55:[-1,6.38,-56.2,-14.42],BL56:[-1,6.48,-62.74,-15.79],BL57:[-1,6.34,-68.92,-14.93],BL58:[-1,8.14,-71.31,-13.73],BL59:[-1,6.69,-79.74,-13.05],BL60:[-1,7.02,-86.51,-12.53],BL61:[-1,7.47,-90.88,-12.75],BL62:[-1,8.33,-88.69,-9.88],BL63:[-1,9.02,-90.72,-7.6],BL64:[-1,9.49,-91.24,-6.02],BL65:[-1,10.24,-91.88,-1.57],BL66:[-1,10.47,-92.03,0.6],BL67:[-1,9.88,-91.77,3.36],
+// KI 肾经 27穴
+KI1:[-1,6.38,-92.78,-1.49],KI2:[-1,2.59,-89.85,-6.26],KI3:[-1,3.09,-85.95,-11.83],KI4:[-1,3.72,-87.42,-13.23],KI5:[-1,3.13,-88.49,-11.76],KI6:[-1,2.54,-87.71,-10.16],KI7:[-1,3.58,-81.51,-12.27],KI8:[-1,3.19,-81.53,-11.14],KI9:[-1,2.97,-74.7,-11.73],KI10:[-1,1.95,-51.66,-11.59],KI11:[-1,1.19,-10.28,0.61],KI12:[-1,1.25,-7.34,1.12],KI13:[-1,1.25,-4.08,1.88],KI14:[-1,1.22,-0.71,2.53],KI15:[-1,1.22,2.54,3.08],KI16:[-1,1.22,5.89,3.27],KI17:[-1,1.26,10.81,3.46],KI18:[-1,1.26,13.33,3.55],KI19:[-1,1.26,15.7,3.78],KI20:[-1,1.26,18.2,3.88],KI21:[-1,1.26,20.65,3.94],KI22:[-1,5.21,26.27,4.02],KI23:[-1,5.26,29.03,3.92],KI24:[-1,5.17,32.6,3.04],KI25:[-1,4.88,35.91,1.61],KI26:[-1,4.6,38.74,0.09],KI27:[-1,4.47,40.9,-1.07],
+// PC 心包经 9穴
+PC1:[-1,12.14,29.5,1.8],PC2:[-1,21.51,26.4,-6.4],PC3:[-1,24.88,12.84,-8.33],PC4:[-1,30.97,1.13,-4.4],PC5:[-1,33.25,-2.08,-3.24],PC6:[-1,34.18,-3.63,-2.46],PC7:[-1,35.81,-7.09,-0.62],PC8:[-1,39.22,-13.27,0.78],PC9:[-1,42.11,-20.29,2.77],
+// TE 三焦经 23穴
+TE1:[-1,39.56,-20.09,0.05],TE2:[-1,37.55,-15.2,-1.95],TE3:[-1,37.51,-13.41,-2.89],TE4:[-1,36.66,-8.15,-4.29],TE5:[-1,35.34,-4.16,-5.86],TE6:[-1,34.49,-2.48,-6.9],TE7:[-1,33.68,-2.88,-7.23],TE8:[-1,34.1,-0.95,-8.16],TE9:[-1,31.48,4.55,-10.94],TE10:[-1,24.37,14.71,-14.42],TE11:[-1,23.71,16.77,-14.5],TE12:[-1,20.77,23.0,-15.72],TE13:[-1,19.71,29.94,-15.35],TE14:[-1,18.2,43.41,-11.59],TE15:[-1,7.23,44.03,-16.22],TE16:[-1,5.0,53.63,-10.67],TE17:[-1,5.88,56.78,-8.14],TE18:[-1,6.52,58.68,-9.82],TE19:[-1,7.02,61.17,-10.41],TE20:[-1,7.27,63.09,-8.77],TE21:[-1,6.81,60.45,-6.84],TE22:[-1,7.12,61.9,-6.99],TE23:[-1,5.69,62.99,-0.47],
+// GB 胆经 44穴
+GB1:[-1,5.77,61.59,-0.66],GB2:[-1,6.52,58.63,-6.82],GB3:[-1,6.69,60.22,-4.86],GB4:[-1,6.34,66.75,-2.97],GB5:[-1,6.61,65.55,-3.5],GB6:[-1,6.84,63.94,-4.58],GB7:[-1,6.88,62.49,-5.78],GB8:[-1,7.26,65.1,-8.08],GB9:[-1,7.25,65.0,-10.04],GB10:[-1,6.72,62.54,-12.0],GB11:[-1,6.18,59.5,-11.9],GB12:[-1,5.91,57.26,-9.79],GB13:[-1,4.42,69.7,-1.76],GB14:[-1,3.14,66.18,1.67],GB15:[-1,3.13,70.4,-1.36],GB16:[-1,3.17,71.48,-3.69],GB17:[-1,3.12,72.01,-5.82],GB18:[-1,3.16,72.03,-10.4],GB19:[-1,4.01,59.68,-14.7],GB20:[-1,3.65,56.21,-12.82],GB21:[-1,8.29,45.62,-14.82],GB22:[-1,15.72,31.35,-6.89],GB23:[-1,15.47,30.51,-4.9],GB24:[-1,10.11,19.32,1.7],GB25:[-1,12.24,12.15,-11.31],GB26:[-1,13.56,6.48,-6.61],GB27:[-1,11.39,-4.13,-0.73],GB28:[-1,10.8,-5.58,-0.61],GB29:[-1,15.13,-7.52,-5.87],GB30:[-1,9.45,-13.57,-17.84],GB31:[-1,13.67,-32.18,-9.34],GB32:[-1,13.27,-36.38,-8.89],GB33:[-1,11.44,-47.41,-7.73],GB34:[-1,9.85,-56.92,-6.44],GB35:[-1,9.99,-71.35,-10.07],GB36:[-1,9.93,-71.4,-7.97],GB37:[-1,8.76,-75.76,-7.98],GB38:[-1,8.45,-78.12,-8.13],GB39:[-1,8.28,-80.22,-8.54],GB40:[-1,8.54,-87.81,-7.74],GB41:[-1,8.81,-89.07,-4.39],GB42:[-1,8.84,-90.14,-1.01],GB43:[-1,9.04,-91.5,2.39],GB44:[-1,8.78,-91.56,5.06],
+// LR 肝经 14穴
+LR1:[-1,4.71,-91.18,5.69],LR2:[-1,4.68,-90.44,3.32],LR3:[-1,5.29,-88.06,-1.41],LR4:[-1,3.56,-85.56,-6.93],LR5:[-1,3.28,-74.67,-8.86],LR6:[-1,2.79,-69.9,-8.54],LR7:[-1,1.35,-56.18,-11.41],LR8:[-1,1.62,-51.52,-10.0],LR9:[-1,0.89,-39.07,-6.76],LR10:[-1,4.84,-16.69,-0.5],LR11:[-1,4.88,-14.64,-0.49],LR12:[-1,6.48,-10.36,0.24],LR13:[-1,13.23,10.68,-6.88],LR14:[-1,10.06,23.01,1.96],
+// DU 督脉 29穴
+DU1:[0,0.01,-14.76,-14.05],DU2:[0,-0.01,-9.16,-17.6],DU3:[0,0.0,3.23,-15.91],DU4:[0,0.04,9.42,-15.14],DU5:[0,0.01,12.23,-15.12],DU6:[0,0.02,16.93,-15.96],DU7:[0,-0.09,20.01,-16.44],DU8:[0,-0.05,22.63,-17.18],DU9:[0,0.01,27.38,-17.94],DU10:[0,0.01,29.73,-18.12],DU11:[0,-0.01,32.86,-18.35],DU12:[0,0.0,38.76,-17.64],DU13:[0,-0.02,43.07,-15.84],DU14:[0,-0.02,44.9,-15.12],DU15:[0,0.01,54.63,-13.55],DU16:[0,0.01,56.29,-14.21],DU17:[0,0.01,59.63,-16.08],DU18:[0,0.01,64.16,-17.12],DU19:[0,0.01,68.18,-16.29],DU20:[0,-0.06,71.4,-13.49],DU21:[0,0.01,72.91,-8.9],DU22:[0,-0.05,72.45,-4.38],DU23:[0,-0.05,71.48,-1.77],DU24:[0,-0.01,70.99,-0.93],DU25:[0,0.03,58.2,4.63],DU26:[0,0.05,56.41,3.13],DU27:[0,-0.03,55.31,3.42],DU28:[0,-0.01,55.92,2.87],DU29:[0,0.04,63.72,2.48],
+};
+
+
+// ===== DB DATA (from SQLite) =====
+const DB_RAW = [{"c":"SP21","n":"大包","p":"Dàbāo","m":"SP","l":"在胸外侧区，第6肋间隙，在腋中线上。","f":"①咳喘，胸胁胀痛。②全身疼痛，四肢无力。","k":"斜刺或平刺0.5-0.8寸。","t":"脾之大络"},{"c":"HT1","n":"极泉","p":"Jíquán","m":"HT","l":"在腋区，腋窝中央，腋动脉搏动处。","f":"①心痛，心悸。，②干呕，咽干。，③，肩臂痛，胁肋疼痛，上肢不遂，瘰疬。","k":"避开腋动脉，直刺或斜刺0.5-0.8寸。","t":""},{"c":"HT2","n":"青灵","p":"Qīnglíng","m":"HT","l":"在臂前区，肘横纹上3寸，肱二头肌的内侧沟中。","f":"①瘿气。②腋胁痛，肩臂疼痛。","k":"直刺0.5-1寸。","t":""},{"c":"HT3","n":"少海","p":"Shàohǎi","m":"HT","l":"在肘前区，横平肘横纹，肱骨内上髁前缘。注:屈肘，在肘横纹内侧端与肱骨内上髁连线的中点处。","f":"①心痛，呕吐。②瘰疬。③，腋痛，胁痛，肘臂挛痛。","k":"直刺0.5-1寸。","t":"合穴"},{"c":"HT4","n":"灵道","p":"Língdào","m":"HT","l":"在前臂前区，腕掌侧远端横纹上1.5寸，尺侧腕屈肌腱的桡侧缘。","f":"①心痛，心悸。②暴喑。③，肘臂挛痛。","k":"直刺0.3-0.5寸，不宜深刺，以免伤及血管和神经。","t":"经穴"},{"c":"HT5","n":"通里","p":"Tōnglǐ","m":"HT","l":"在前臂前区，腕掌侧远端横纹上1寸，尺侧屈腕肌腱的桡侧缘。","f":"①暴喑，舌强不语。②心悸，心痛。③，腕臂痛。","k":"直刺0.3-0.5寸，不宜深刺，以免伤及血管和神经。","t":"络穴"},{"c":"HT6","n":"阴郄","p":"Yīnxì","m":"HT","l":"在前臂前区，腕掌侧远端横纹上0.5寸，尺侧屈腕肌腱的桡侧缘。","f":"①心痛，心悸。②咯血，衄血。③骨蒸盗汗。","k":"直刺0.3-0.5寸，不宜深刺，以免伤及血管和神经。","t":"郄穴"},{"c":"HT7","n":"神门","p":"Shénmén","m":"HT","l":"在腕前区，腕掌侧远端横纹尺侧端，尺侧腕屈肌腱的桡侧缘。注：于豌豆骨上缘桡侧凹陷中，在腕掌侧远端横纹上取穴。","f":"①失眠，健忘，痴呆，癫狂痫。②心痛，心烦，心烦。","k":"直刺0.3-0.5寸。","t":"输穴，原穴"},{"c":"HT8","n":"少府","p":"Shàofǔ","m":"HT","l":"在手掌，横平第5掌指关节近端，第4、5掌骨之间。注：握拳时，小指尖所指处。","f":"①心悸，胸痛。②肘臂痛，小指挛痛，掌中热。","k":"直刺0.3-0.5寸。","t":"荥穴"},{"c":"HT9","n":"少冲","p":"Shàochōng","m":"HT","l":"在手指，小指末节桡侧，指甲根角侧上方0.1寸（指寸）。","f":"①心悸，心痛。②热病，昏迷，癫狂。③胸胁痛。","k":"浅刺0.1寸，或三棱针点刺出血。","t":"井穴"},{"c":"SI1","n":"少泽","p":"Shàozé","m":"SI","l":"在手指，小指末节尺侧，指甲根角侧上方0.1寸（指寸）。","f":"①头痛，目翳，咽喉肿痛，耳聋，耳鸣。②乳痈，乳汁少。③昏迷，热病。","k":"浅刺0.1寸或点刺出血。","t":"井穴"},{"c":"SI2","n":"前谷","p":"Qiángǔ","m":"SI","l":"在手指，第5掌指关节尺侧远端赤白肉际凹陷中。注：半握拳，第5掌指横纹尺侧端。","f":"①头痛，目痛，耳鸣，咽喉肿痛。②乳痈，乳少。③热病，癫狂。④手指肿痛。","k":"直刺0.2-0.3寸。","t":"荥穴"},{"c":"SI3","n":"后溪","p":"Hòuxī","m":"SI","l":"在手内侧，第5掌指关节尺侧近端赤白肉际凹陷中。注：半握拳，掌远侧横纹头（尺侧）赤白肉际处。","f":"①头项强痛，腰背痛。②目赤，耳聋。③癫狂痫，疟疾。④手指及肘臂痛。","k":"直刺0.5-1寸。或向合谷方向透刺。","t":"输穴，八脉交会穴（通督脉）"},{"c":"SI4","n":"腕骨","p":"Wàngǔ","m":"SI","l":"在腕区，第5掌骨底与三角骨之间的赤白肉际凹陷中。","f":"①耳鸣，目翳。②黄疸，热病，疟疾，惊风。，③，头项强痛，指挛腕痛。","k":"直刺0.3-0.5寸。","t":"原穴"},{"c":"SI5","n":"阳谷","p":"Yánggǔ","m":"SI","l":"在腕后区，尺骨茎突与三角骨之间的凹陷中。","f":"①头痛，眩晕，耳鸣，耳聋。②热病，癫狂痫。③腕臂痛。","k":"直刺0.3-0.5寸。","t":"经穴"},{"c":"SI6","n":"养老","p":"Yǎnglǎo","m":"SI","l":"在前臂后区，腕背横纹上1寸，尺骨头桡侧凹陷中。注：掌心向下，用一手指按在尺骨头的最高点上，然后手掌旋后，在手指滑入的骨缝中取穴。","f":"①目视不明，目痛。②颈、肩、臂、腰背痛。","k":"以掌心向胸姿势，直刺或斜刺0.5-0.8寸。","t":"郄穴"},{"c":"SI7","n":"支正","p":"Zhīzhèng","m":"SI","l":"在前臂后区，腕背侧远端横纹上5寸，尺骨尺侧与尺侧腕屈肌之间。","f":"①头痛，项强，肘臂酸痛。②热病，癫狂。","k":"直刺0.5-0.8寸。","t":"络穴"},{"c":"SI8","n":"小海","p":"Xiǎohǎi","m":"SI","l":"在肘后区，尺骨鹰嘴与肱骨内上髁之间凹陷处。","f":"①头痛，颈项强痛，肘臂疼痛。②癫痫。","k":"直刺0.3-0.5寸。","t":"合穴"},{"c":"SI9","n":"肩贞","p":"Jiānzhēn","m":"SI","l":"在肩胛区，肩关节后下方，腋后纹头直上1寸。","f":"肩臂疼痛，瘰疬。","k":"直刺或向外斜刺1-1.5寸，不宜向胸侧深刺。","t":""},{"c":"SI10","n":"臑俞","p":"Nàoshū","m":"SI","l":"在肩胛区，腋后纹头直上，肩胛冈下缘凹陷中。","f":"肩臂疼痛，瘰疬。","k":"直刺或向外斜刺0.5-1.5寸。不宜向胸侧深刺。","t":"手太阳经、足太阳经、阳维脉、阳跷脉交会穴"},{"c":"SI11","n":"天宗","p":"Tiānzōng","m":"SI","l":"在肩胛区，肩胛冈中点与肩胛骨下角连线的上1∕3与下2∕3交点凹陷中。","f":"①肩胛疼痛。②乳痈。③咳嗽，气喘。","k":"直刺0.5-1寸，遇到阻力不可强行进针。","t":""},{"c":"SI12","n":"秉风","p":"Bǐngfēng","m":"SI","l":"在肩胛区，肩胛冈中点上方冈上窝中。","f":"肩胛疼痛，上肢酸麻。","k":"直刺或斜刺0.5-1寸。","t":"手少阳经、手太阳经、手阳明经、足少阳经交会穴"},{"c":"SI13","n":"曲垣","p":"Qūyuán","m":"SI","l":"在肩胛区，肩胛冈内侧端上缘凹陷中。注：臑俞与第2胸椎棘突连线的中点处。","f":"肩胛疼痛。","k":"直刺或向外斜刺0.5-1寸。不宜向胸侧深刺。","t":""},{"c":"SI14","n":"肩外俞","p":"Jiānwàishū","m":"SI","l":"在脊柱区，第1胸椎棘突下，后正中线旁开3寸。","f":"肩背疼痛，颈项强急。","k":"斜刺0.5-0.8寸。不宜深刺。","t":""},{"c":"SI15","n":"肩中俞","p":"Jiānzhōngshū","m":"SI","l":"在脊柱区，第7颈椎棘突下，后正中线旁开2寸。","f":"①咳嗽，气喘。②目视不明。③肩背疼痛。。","k":"斜刺0.5-0.8寸。不宜深刺。","t":""},{"c":"SI16","n":"天窗","p":"Tiānchuāng","m":"SI","l":"在颈部，横平喉结，胸锁乳突肌的后缘。","f":"①耳鸣，耳聋，咽喉肿痛，暴喑。②颈项强痛。","k":"直刺或向下斜刺0.5-1寸。","t":""},{"c":"SI17","n":"天容","p":"Tiānróng","m":"SI","l":"在颈部，下颌角后方，胸锁乳突肌的前缘凹陷中。","f":"①耳鸣，耳聋，咽喉肿痛。②瘿气，颈项肿痛。","k":"直刺0.5-1寸。不宜深刺。","t":""},{"c":"SI18","n":"颧髎","p":"Quánliáo","m":"SI","l":"在面部，颧骨下缘，目外眦直下的凹陷中。","f":"口眼㖞斜，眼睑瞤动，目赤，齿痛，面痛，颊肿。","k":"直刺0.3-0.5寸，斜刺或平刺0.5-1寸。","t":"手少阳经、手太阳经交会穴"},{"c":"SI19","n":"听宫","p":"Tīnggōng","m":"SI","l":"在面部，耳屏正中与下颌骨髁状突之间的凹陷中。","f":"①耳鸣，耳聋，聤耳，齿痛。②癫狂痫。","k":"微张口，直刺0.5-1寸。","t":"手少阳经、手太阳经、足少阳经交会穴"},{"c":"BL1","n":"睛明","p":"Jīngmíng","m":"BL","l":"在面部，目内眦内上方眶内侧壁凹陷中。注:闭目，在目内眦内上方0.1寸的凹陷中。","f":"①目赤肿痛，迎风流泪，近视，目视不明，夜盲，目翳。，②眩晕。","k":"嘱患者闭目，医者押手轻推眼球向外侧固定，刺手持针，于眶内缘和眼球之间，紧靠眶内缘缓慢直刺0.3-0.8寸，不捻转，不提插，出针后按压针孔片刻，以防出血。禁灸。","t":"手太阳经、足太阳经、足阳明经、阴跷脉、阳跷脉交会穴"},{"c":"BL2","n":"攒竹","p":"Cuánzhú","m":"BL","l":"在面部，眉头凹陷中，额切迹处。","f":"①头痛，眉棱骨痛。，②目视不明，目赤肿痛，眼睑瞤动，眼睑下垂，迎风流泪。③口眼㖞斜，面痛。④呃逆。","k":"平刺0.3-0.5寸。禁灸。","t":""},{"c":"BL3","n":"眉冲","p":"Méichōng","m":"BL","l":"在头部，额切迹直上入发际0.5寸。","f":"①头痛，眩晕，鼻塞。②癫痫。","k":"向后平刺0.3-0.5寸。","t":""},{"c":"BL4","n":"曲差","p":"Qūchā","m":"BL","l":"在头部，前发际正中直上0.5寸，旁开1.5寸。","f":"①头痛，眩晕。②目视不明，鼻塞，鼻衄。","k":"平刺0.5-0.8寸。","t":""},{"c":"BL5","n":"五处","p":"Wǔchù","m":"BL","l":"在头部，前发际正中直上1寸，旁开1.5寸。","f":"①头痛，眩晕。②癫痫，抽搐，热病。","k":"平刺0.3-0.5寸。","t":""},{"c":"BL6","n":"承光","p":"Chéngguāng","m":"BL","l":"在头部，前发际正中直上2.5寸，旁开1.5寸。","f":"①头痛，眩晕。②目视不明，鼻塞。","k":"平刺0.3-0.5寸。","t":""},{"c":"BL7","n":"通天","p":"Tōngtiān","m":"BL","l":"在头部，前发际正中直上4寸，旁开1.5寸。","f":"①鼻塞，鼻渊，鼻衄。②头痛，眩晕。","k":"平刺0.3-0.5寸。","t":""},{"c":"BL8","n":"络却","p":"Luòquè","m":"BL","l":"在头部，前发际正中直上5.5寸，旁开1.5寸。","f":"①头晕，眩晕，癫狂。②耳鸣，鼻塞。","k":"平刺0.3-0.5寸。","t":""},{"c":"BL9","n":"玉枕","p":"Yùzhěn","m":"BL","l":"在头部，横平枕外隆凸上缘，后发际正中旁开1.3寸。注：斜方肌外侧缘直上与枕外隆凸上缘水平线的交点，横平脑户。","f":"①头痛，颈项强痛。②目痛，鼻塞。","k":"平刺0.3-0.5寸。","t":""},{"c":"BL10","n":"天柱","p":"Tiānzhù","m":"BL","l":"在颈后区，横平第2颈椎棘突上际，斜方肌外缘凹陷中。","f":"①头痛，眩晕。②颈项强痛，肩背痛。③目赤肿痛，鼻塞。④癫狂痫，热病。","k":"直刺或斜刺0.5-0.8寸，不可向内上方深刺，以免伤及延髓。","t":""},{"c":"BL11","n":"大杼","p":"Dàzhù","m":"BL","l":"在脊柱区，第1胸椎棘突下，后正中线旁开1.5寸。","f":"①咳嗽，气喘。②发热。③颈项强痛，肩背痛。","k":"斜刺0.5-0.8寸，不宜直刺深刺。","t":"八会穴（骨会），手太阳经、足太阳经交会穴"},{"c":"BL12","n":"风门","p":"Fēngmén","m":"BL","l":"在脊柱区，第2胸椎棘突下，后正中线旁开1.5寸。","f":"①伤风，咳嗽，发热，鼻塞，鼻鼽。②头痛，颈项强痛，胸背痛。","k":"斜刺0.5-0.8寸，不宜直刺深刺。","t":"足太阳经、督脉交会穴"},{"c":"BL13","n":"肺俞","p":"Fèishū","m":"BL","l":"在脊柱区，第3胸椎棘突下，后正中线旁开1.5寸。","f":"①咳嗽，气喘，咳血，鼻塞，咽喉肿痛。②肺痨，骨蒸潮热，盗汗。③皮肤瘙痒，瘾疹。","k":"斜刺0.5-0.8寸，不宜直刺深刺。","t":"肺之背俞穴"},{"c":"BL14","n":"厥阴俞","p":"Juéyīnshū","m":"BL","l":"在脊柱区，第4胸椎棘突下，后正中线旁开1.5寸。","f":"①心痛，心悸，胸闷。②咳嗽。③呕吐。","k":"斜刺0.5-0.8寸，不宜直刺深刺。","t":"心包之背俞穴"},{"c":"BL15","n":"心俞","p":"Xīnshū","m":"BL","l":"在脊柱区，第5胸椎棘突下，后正中线旁开1.5寸。","f":"①心痛，心悸，心烦。②失眠，健忘，梦遗。③咳嗽，咳血，盗汗。④癫狂痫。","k":"斜刺0.5-0.8寸，不宜直刺深刺。","t":"心之背俞穴"},{"c":"BL16","n":"督俞","p":"Dūshū","m":"BL","l":"在脊柱区，第6胸椎棘突下，后正中线旁开1.5寸。","f":"①心痛。②腹痛，腹胀，肠鸣，呃逆。","k":"斜刺0.5-0.8寸，不宜直刺深刺。","t":""},{"c":"BL17","n":"膈俞","p":"Géshū","m":"BL","l":"在脊柱区，第7胸椎棘突下，后正中线旁开1.5寸。","f":"①呕吐，呃逆，饮食不下。②咳嗽，气喘，潮热，盗汗。③瘾疹，皮肤瘙痒。④咳血，衄血，吐血，崩漏，便血，血虚。","k":"斜刺0.5-0.8寸，不宜直刺深刺。","t":"八会穴（血会）"},{"c":"BL18","n":"肝俞","p":"Gānshū","m":"BL","l":"在脊柱区，第9胸椎棘突下，后正中线旁开1.5寸。","f":"①黄疸，胁痛。②目赤，目视不明，夜盲，迎风流泪。③吐血，衄血。④眩晕，癫狂痫。","k":"斜刺0.5-0.8寸，不宜直刺深刺。","t":"肝之背俞穴"},{"c":"BL19","n":"胆俞","p":"Dǎnshū","m":"BL","l":"在脊柱区，第10胸椎棘突下，后正中线旁开1.5寸。","f":"①黄疸，口苦，呕吐，胁痛。②肺痨，潮热。","k":"斜刺0.5-0.8寸，不宜直刺深刺。","t":"胆之背俞穴"},{"c":"BL20","n":"脾俞","p":"Píshū","m":"BL","l":"在脊柱区，第11胸椎棘突下，后正中线旁开1.5寸。","f":"①腹胀，呕吐，泄泻，痢疾。②水肿，黄疸。③多食善饥，羸瘦。","k":"直刺0.5-1寸。","t":"脾之背俞穴"},{"c":"BL21","n":"胃俞","p":"Wèishū","m":"BL","l":"在脊柱区，第12胸椎棘突下，后正中线旁开1.5寸。","f":"①胃脘痛，呕吐，腹胀，肠鸣。②多食善饥，羸瘦。","k":"直刺0.5-1寸。","t":"胃之背俞穴"},{"c":"BL22","n":"三焦俞","p":"Sānjiāoshū","m":"BL","l":"在脊柱区，第1腰椎棘突下，后正中线旁开1.5寸。","f":"①水肿，小便不利。②腹胀，肠鸣，呕吐，泄泻，痢疾。③腰背痛。","k":"直刺0.5-1寸。","t":"三焦之背俞穴"},{"c":"BL23","n":"肾俞","p":"Shènshū","m":"BL","l":"在脊柱区，第2腰椎棘突下，后正中线旁开1.5寸。","f":"①遗精，阳萎，早泄，月经不调，带下，不孕。②遗尿，小便不利，水肿。③耳鸣，耳聋。④咳嗽，气喘。⑤腰痛。","k":"直刺0.5-1寸。","t":"肾之背俞穴"},{"c":"BL24","n":"气海俞","p":"Qìhǎishū","m":"BL","l":"在脊柱区，第3腰椎棘突下，后正中线旁开1.5寸。","f":"①腰痛，痛经。②痔疾。","k":"直刺0.5-1寸。","t":""},{"c":"BL25","n":"大肠俞","p":"Dàchángshū","m":"BL","l":"在脊柱区，第4腰椎棘突下，后正中线旁开1.5寸。","f":"①腰腿痛。②腹胀，腹痛，肠鸣，泄泻，便秘，痢疾。","k":"直刺0.8-1.2寸。","t":"大肠之背俞穴"},{"c":"BL26","n":"关元俞","p":"Guānyuánshū","m":"BL","l":"在脊柱区，第5腰椎棘突下，后正中线旁开1.5寸。","f":"①腹胀，泄泻。②尿频，遗尿，小便不利。③腰骶痛。","k":"直刺0.8-1.2寸。","t":""},{"c":"BL27","n":"小肠俞","p":"Xiǎochángshū","m":"BL","l":"在骶区，横平第1骶后孔，骶正中嵴旁开1.5寸。","f":"①遗精，遗尿，尿血，带下，疝气。②腹痛，泄泻，痢疾。③腰骶痛。","k":"直刺0.8-1.2寸。","t":"小肠之背俞穴"},{"c":"BL28","n":"膀胱俞","p":"Pángguāngshū","m":"BL","l":"在骶区，横平第2骶后孔，骶正中嵴旁开1.5寸。","f":"①小便不利，尿频，遗尿。②泄泻，便秘。③腰骶痛。","k":"直刺0.8-1.2寸。","t":"膀胱之背俞穴"},{"c":"BL29","n":"中膂俞","p":"Zhōnglǚshū","m":"BL","l":"在骶区，横平第3骶后孔，骶正中嵴旁开1.5寸。","f":"①腹胀，泄泻，痢疾。②腰骶痛。","k":"直刺1-1.5寸。","t":""},{"c":"BL30","n":"白环俞","p":"Báihuánshū","m":"BL","l":"在骶区，横平第4骶后孔，骶正中嵴旁开1.5寸。","f":"①遗精，带下，月经不调，遗尿。②腰骶痛。","k":"直刺1-1.5寸。","t":""},{"c":"BL31","n":"上髎","p":"Shàngliáo","m":"BL","l":"在骶区，正对第1骶后孔中。","f":"①月经不调，带下，遗精，阴挺，阴疝。②腰骶痛。","k":"直刺1-1.5寸。","t":""},{"c":"BL32","n":"次髎","p":"Cìliáo","m":"BL","l":"在骶区，正对第2骶后孔中。","f":"①月经不调，痛经，带下，遗精，疝气。②小便不利，遗尿。③腰痛，下肢痿痹。","k":"直刺1-1.5寸。","t":""},{"c":"BL33","n":"中髎","p":"Zhōngliáo","m":"BL","l":"在骶区，正对第3骶后孔中。","f":"①月经不调，带下，小便不利。②便秘，泄泻。③腰骶痛。","k":"直刺1-1.5寸。","t":""},{"c":"BL34","n":"下髎","p":"Xiàliáo","m":"BL","l":"在骶区，正对第4骶后孔中。","f":"①小腹痛，腰骶痛。②小便不利，带下。③便秘，便血。","k":"直刺1-1.5寸。","t":""},{"c":"BL35","n":"会阳","p":"Huìyáng","m":"BL","l":"在骶区，尾骨端旁开0.5寸。","f":"①泄泻，痢疾。②痔疾，便血。③阳痿，带下。","k":"直刺0.8-1.2寸。","t":""},{"c":"BL36","n":"承扶","p":"Chéngfú","m":"BL","l":"在股后区，臀沟的中点。","f":"①痔疾，便秘，小便不利。②腰、骶、臀、股痛。","k":"直刺1-2寸。","t":""},{"c":"BL37","n":"殷门","p":"Yīnmén","m":"BL","l":"在股后区，臀沟下6寸，股二头肌与半腱肌之间。","f":"腰痛，下肢痿痹。","k":"直刺1-2寸。","t":""},{"c":"BL38","n":"浮郄","p":"Fúxì","m":"BL","l":"在膝后区，腘横纹上1寸，股二头肌腱的内侧缘。","f":"①膝、股、腘疼痛、麻木。②便秘。","k":"直刺1-1.5寸。","t":""},{"c":"BL39","n":"委阳","p":"Wěiyáng","m":"BL","l":"在膝部，腘横纹上，股二头肌腱的内侧缘。","f":"①腹满，水肿，小便不利。②腰背痛，下肢挛痛。","k":"直刺1-1.5寸。","t":"三焦下合穴"},{"c":"BL40","n":"委中","p":"Wěizhōng","m":"BL","l":"在膝后区，腘横纹中点。","f":"①腰背痛，下肢痿痹。②小便不利，遗尿。③丹毒，疔疮。","k":"直刺1-1.5寸，或用三棱针点刺出血。","t":"合穴，膀胱下合穴"},{"c":"BL41","n":"附分","p":"Fùfēn","m":"BL","l":"在脊柱区，第2胸椎棘突下，后正中线旁开3寸。","f":"颈项强痛，肩背拘急，肘臂麻木","k":"斜刺0.5-0.8寸。不宜直刺深刺。","t":"手太阳经、足太阳经交会穴"},{"c":"BL42","n":"魄户","p":"Pòhù","m":"BL","l":"在脊柱区，第3胸椎棘突下，后正中线旁开3寸。","f":"①咳嗽，气喘，肺痨，咳血。②肩背痛，颈项强痛。","k":"斜刺0.5-0.8寸。不宜直刺深刺。","t":""},{"c":"BL43","n":"膏肓","p":"Gāohuāng","m":"BL","l":"在脊柱区，第4胸椎棘突下，后正中线旁开3寸。","f":"①咳嗽，气喘，盗汗，肺痨。②健忘，遗精。③赢瘦，虚劳。","k":"斜刺0.5-0.8寸。不宜直刺深刺。","t":""},{"c":"BL44","n":"神堂","p":"Shéntáng","m":"BL","l":"在脊柱区，第5胸椎棘突下，后正中线旁开3寸","f":"①心痛，心悸。②咳嗽，气喘，胸闷。③背痛。","k":"斜刺0.5-0.8寸。不宜直刺深刺。","t":""},{"c":"BL45","n":"譩譆","p":"Yìxǐ","m":"BL","l":"在脊柱区，第6胸椎棘突下，后正中线旁开3寸。","f":"①咳嗽，气喘。②疟疾，热病。③肩背痛。","k":"斜刺0.5-0.8寸。不宜直刺深刺。","t":""},{"c":"BL46","n":"膈关","p":"Géguān","m":"BL","l":"在脊柱区，第7胸椎棘突下，后正中线旁开3寸。","f":"①呕吐，呕逆，嗳气。②胸闷。③腰背痛。","k":"斜刺0.5-0.8寸。不宜直刺深刺。","t":""},{"c":"BL47","n":"魂门","p":"Húnmén","m":"BL","l":"在脊柱区，第9胸椎棘突下，后正中线旁开3寸。","f":"①呕吐，泄泻，黄疸。②胁痛，背痛。","k":"斜刺0.5-0.8寸。不宜直刺深刺。","t":""},{"c":"BL48","n":"阳纲","p":"Yángāng","m":"BL","l":"在脊柱区，第l0胸椎棘突下，后正中线旁开3寸。","f":"①肠鸣，泄泻。②黄疸，消渴。","k":"斜刺0.5-0.8寸。不宜直刺深刺。","t":""},{"c":"BL49","n":"意舍","p":"Yìshè","m":"BL","l":"在脊柱区，第11胸椎棘突下，后正中线旁开3寸。","f":"①腹胀，肠鸣，泄泻，呕吐。②黄疸，消渴。③背痛。","k":"斜刺0.5-0.8寸。","t":""},{"c":"BL50","n":"胃仓","p":"Wèicāng","m":"BL","l":"在脊柱区，第12胸椎棘突下，后正中线旁开3寸。","f":"①胃脘痛，腹胀，小儿食积。②水肿，脊背痛。","k":"斜刺0.5-0.8寸。","t":""},{"c":"BL51","n":"肓门","p":"Huāngmén","m":"BL","l":"在腰区，第1腰椎棘突下，后正中线旁开3寸。","f":"①腹痛，痞块，便秘。②乳疾。","k":"直刺0.5-1寸。","t":""},{"c":"BL52","n":"志室","p":"Zhìshì","m":"BL","l":"在腰区，第2腰椎棘突下，后正中线旁开3寸。","f":"①遗精，阳痿，月经不调。②腰背痛。③遗尿，小便不利，水肿。","k":"直刺0.5-1寸。","t":""},{"c":"BL53","n":"胞肓","p":"Bāohuāng","m":"BL","l":"在骶区，横平第2骶后孔，骶正中嵴旁开3寸。","f":"①癃闭。②肠鸣，腹胀，便秘。③腰脊痛。","k":"直刺0.8-1.2寸。","t":""},{"c":"BL54","n":"秩边","p":"Zhìbiān","m":"BL","l":"在骶区，横平第4骶后孔，骶正中嵴旁开3寸。","f":"①腰腿痛，下肢痿痹。②痔疾，便秘。③小便不利，阴痛。","k":"直刺1.5-2寸。","t":""},{"c":"BL55","n":"合阳","p":"Héyáng","m":"BL","l":"在小腿后区，腘横纹下2寸，腓肠肌内、外侧头之间。","f":"①腰背痛，下肢痿痹。②疝气，崩漏。","k":"直刺1-1.5寸。","t":""},{"c":"BL56","n":"承筋","p":"Chéngjīn","m":"BL","l":"在小腿后区，腘横纹下5寸，腓肠肌两肌腹之间。","f":"①痔疾。②腰背痛，下肢拘急疼痛。","k":"直刺1-1.5寸。","t":""},{"c":"BL57","n":"承山","p":"Chéngshān","m":"BL","l":"在小腿后区，腓肠肌两肌腹与肌腱交角处。注：伸直小腿或足跟上提时，腓肠肌肌腹下出现尖角凹陷中。","f":"①痔疾，便秘。②腰背痛，下肢拘急疼痛。","k":"直刺1-2寸。","t":""},{"c":"BL58","n":"飞扬","p":"Fēiyáng","m":"BL","l":"在小腿后区，昆仑直上7寸，腓肠肌外下缘与跟腱移行处。","f":"①头痛，眩晕。②鼻塞，鼻衄，鼻鼽。③腰痛，下肢痿痹。④痔疾。","k":"直刺1-1.5寸。","t":"络穴"},{"c":"BL59","n":"跗阳","p":"Fùyáng","m":"BL","l":"在小腿后区，昆仑直上3寸，腓骨与跟腱之间。","f":"①头痛。②腰骶痛，下肢痿痹，足踝肿痛。","k":"直刺0.8-1.2寸。","t":"阳跷脉郄穴"},{"c":"BL60","n":"昆仑","p":"Kūnlún","m":"BL","l":"在踝区，外踝尖与跟腱之间的凹陷中。","f":"①头痛，目痛，鼻衄。②颈项强痛，腰痛，足跟肿痛。③滞产。④癫痫。","k":"直刺0.5-0.8寸。孕妇禁用。","t":"经穴"},{"c":"BL61","n":"仆参","p":"Púcān","m":"BL","l":"在跟区，昆仑直下，跟骨外侧，赤白肉际处。","f":"①腰痛，下肢痿痹，足跟痛。②癫痫。","k":"直刺0.3-0.5寸。","t":"足太阳经、阳跷脉交会穴"},{"c":"BL62","n":"申脉","p":"Shēnmài","m":"BL","l":"在踝区，外踝尖直下，外踝下缘与跟骨之间凹陷中。","f":"①头痛，眩晕，失眠，嗜卧，癫狂痫。②腰腿痛。","k":"直刺0.3-0.5寸。","t":"八脉交会穴（通阳跷脉）"},{"c":"BL63","n":"金门","p":"Jīnmén","m":"BL","l":"在足背，外踝前缘直下，第5跖骨粗隆后方，骰骨下缘凹陷中。","f":"①头痛，癫痫，小儿惊风。②腰痛，下肢痹痛，足踝肿痛。","k":"直刺0.3-0.5寸。","t":"郄穴"},{"c":"BL64","n":"京骨","p":"Jīnggǔ","m":"BL","l":"在跖区，第5跖骨关节粗隆前下方，赤白肉际处。","f":"①头痛。②颈项强痛，腰腿痛。③癫痫。","k":"直刺0.3-0.5寸。","t":"原穴"},{"c":"BL65","n":"束骨","p":"Shùgǔ","m":"BL","l":"在跖区，第5跖趾关节的近端，赤白肉际处。","f":"①头痛，眩晕。②颈项强痛，腰腿痛。③癫狂痫。","k":"直刺0.3-0.5寸。","t":"输穴"},{"c":"BL66","n":"足通谷","p":"Zútōnggǔ","m":"BL","l":"在跖区，第5跖趾关节的远端，赤白肉际处。","f":"①头痛，颈项强痛。②鼻衄。③癫狂。","k":"直刺0.2-0.3寸。","t":"荥穴"},{"c":"BL67","n":"至阴","p":"Zhìyīn","m":"BL","l":"在足趾，小趾末节外侧，趾甲根角侧后方0.1寸（指寸）。","f":"①胎位不正，滞产。②头痛，目痛，鼻塞，鼻衄。","k":"浅刺0.1寸，或点刺出血。胎位不正用灸法。","t":"井穴"},{"c":"KI1","n":"涌泉","p":"Yǒngquán","m":"KI","l":"在足底，屈足卷趾时足心最凹陷中。注：当足底第2、3趾蹊缘与足跟连线的前1/3与后2/3交点凹陷中。","f":"①头痛，眩晕，失眠，昏厥，癫狂，小儿惊风。②便秘，小便不利。③咽喉肿痛，咳嗽，气喘。④足心热，腰脊痛。","k":"直刺0.5-1寸，针刺时需防止刺伤足底动脉弓。","t":"井穴"},{"c":"KI2","n":"然谷","p":"Ránggǔ","m":"KI","l":"在足内侧，足舟骨粗隆下方，赤白肉际处。","f":"①月经不调，阴挺，阴痒，遗精。②消渴，黄疸，泄泻。③咽喉肿痛，咳血。④小儿脐风。⑤足跗肿痛。","k":"直刺0.5-1寸。","t":"荥穴"},{"c":"KI3","n":"太溪","p":"Tàixī","m":"KI","l":"在踝区，内踝尖与跟腱之间的凹陷中。","f":"①月经不调，遗精，阳痿，小便频数。②消渴，泄泻，便秘。③耳聋，耳鸣，咽喉肿痛，齿痛。④咳嗽，气喘，咳血。⑤失眠，多梦，健忘。⑥腰背痛，足跟、足踝疼痛。","k":"直刺0.5-1寸。","t":"输穴，原穴"},{"c":"KI4","n":"大钟","p":"Dàzhōng","m":"KI","l":"在跟区，内踝后下方，跟骨上缘，跟腱附着部前缘凹陷中。","f":"①癃闭，遗尿，便秘。②咳血，气喘。③痴呆，嗜卧。④腰背，足跟痛。","k":"直刺0.3-0.5寸。","t":"络穴"},{"c":"KI5","n":"水泉","p":"Shuǐquán","m":"KI","l":"在跟区，太溪直下1寸，跟骨结节内侧凹陷中。","f":"①月经不调，痛经，阴挺。②小便不利。③目视不明。","k":"直刺0.3-0.5寸。","t":"郄穴"},{"c":"KI6","n":"照海","p":"Zhàohǎi","m":"KI","l":"在踝区，内踝尖下1寸，内踝下缘边际凹陷中。","f":"①月经不调，痛经，赤白带下，阴挺，小便频数，癃闭。②咽喉干痛，目赤肿痛。③癫狂痫，失眠。","k":"直刺0.3-0.5寸。","t":"八脉交会穴（通阴跷脉）"},{"c":"KI7","n":"复溜","p":"Fùliū","m":"KI","l":"在小腿内侧，内踝尖上2寸，跟腱的前缘。","f":"①腹胀，泄泻。②多汗，无汗，水肿。③下肢痿痹。","k":"直刺0.5-1寸。","t":"经穴"},{"c":"KI8","n":"交信","p":"Jiāoxìn","m":"KI","l":"在小腿内侧，内踝尖上2寸，胫骨内侧缘后际凹陷中。注:复溜前0.5寸。","f":"①月经不调，疝气，癃闭。②泄泻，便秘。","k":"直刺0.5-1寸。","t":"阴跷脉郄穴"},{"c":"KI9","n":"筑宾","p":"Zhùbīn","m":"KI","l":"在小腿内侧，太溪直上5寸，比目鱼肌与跟腱之间。","f":"①癫狂痫。②呕吐。③疝气。④小腿疼痛。","k":"直刺1-1.5寸。","t":"阴维脉郄穴"},{"c":"KI10","n":"阴谷","p":"Yīnggǔ","m":"KI","l":"在膝后区，腘横纹上，半腱肌肌腱外侧缘。","f":"①阳痿，月经不调，崩漏，小便不利。②癫狂。③腰脊痛，少腹、前阴、膝股引痛。","k":"直刺1-1.5寸。","t":"合穴"},{"c":"KI11","n":"横骨","p":"Héngggǔ","m":"KI","l":"在下腹部，脐中下5寸，前正中线旁开0.5寸。","f":"少腹胀痛，疝气，小便不利，遗尿，遗精，阳痿。","k":"直刺1-1.5寸。","t":"足少阴经、冲脉交会穴"},{"c":"KI12","n":"大赫","p":"Dàhè","m":"KI","l":"在下腹部，脐中下4寸，前正中线旁开0.5寸。","f":"遗精，阳痿，阴挺，带下，阴囊挛缩。","k":"直刺1-1.5寸。","t":"足少阴经、冲脉交会穴"},{"c":"KI13","n":"气穴","p":"Qìxué","m":"KI","l":"在下腹部，脐中下3寸，前正中线旁开0.5寸。","f":"①月经不调，带下，不孕。②腹痛引腰脊。","k":"直刺1-1.5寸。","t":"足少阴经、冲脉交会穴"},{"c":"KI14","n":"四满","p":"Sìmǎn","m":"KI","l":"在下腹部，脐中下2寸，前正中线旁开0.5寸。","f":"①月经不调，带下，遗精，遗尿。②泄泻，腹痛，水肿。","k":"直刺1-1.5寸。","t":"足少阴经、冲脉交会穴"},{"c":"KI15","n":"中注","p":"Zhōngzhù","m":"KI","l":"在下腹部，脐中下1寸，前正中线旁开0.5寸。","f":"①腹痛，便秘。②月经不调。","k":"直刺1-1.5寸。","t":"足少阴经、冲脉交会穴"},{"c":"KI16","n":"肓俞","p":"Huāngshū","m":"KI","l":"在腹部，脐中旁开0.5寸。","f":"①腹痛，便秘。②月经不调，疝气。","k":"直刺1-1.5寸。","t":"足少阴经、冲脉交会穴"},{"c":"KI17","n":"商曲","p":"Shāngqū","m":"KI","l":"在上腹部，脐中上2寸，前正中线旁开0.5寸。","f":"腹痛，泄泻，便秘，积聚。","k":"直刺1.0-1.5寸。","t":"足少阴经、冲脉交会穴"},{"c":"KI18","n":"石关","p":"Shíguān","m":"KI","l":"在上腹部，脐中上3寸，前正中线旁开0.5寸。","f":"①腹痛，便秘。②不孕。","k":"直刺1-1.5寸。","t":"足少阴经、冲脉交会穴"},{"c":"KI19","n":"阴都","p":"Yīndū","m":"KI","l":"在上腹部，脐中上4寸，前正中线旁开0.5寸。","f":"腹痛，腹胀，肠鸣。","k":"直刺1-1.5寸。","t":"足少阴经、冲脉交会穴"},{"c":"KI20","n":"腹通谷","p":"Fùtōnggǔ","m":"KI","l":"在上腹部，脐中上5寸，前正中线旁开0.5寸。","f":"腹痛，腹胀，呕吐，腹中积聚。","k":"直刺0.5-1寸。","t":"足少阴经、冲脉交会穴"},{"c":"KI21","n":"幽门","p":"Yōumén","m":"KI","l":"在上腹部，脐中上6寸，前正中线旁开0.5寸。","f":"腹痛，腹胀，呕吐，泄泻。","k":"直刺0.5-1寸。","t":"足少阴经、冲脉交会穴"},{"c":"KI22","n":"步廊","p":"Bùláng","m":"KI","l":"在胸部，第5肋间隙，前正中线旁开2寸。","f":"①咳嗽，气喘，胸胁胀满。②呕吐。","k":"斜刺或平刺0.5-0.8寸。","t":""},{"c":"KI23","n":"神封","p":"Shénfēng","m":"KI","l":"在胸部，第4肋间隙，前正中线旁开2寸。","f":"①咳嗽，气喘，胸胁胀满。②乳痈。③呕吐。","k":"斜刺或平刺0.5-0.8寸。","t":""},{"c":"KI24","n":"灵墟","p":"Língxū","m":"KI","l":"在胸部，第3肋间隙，前正中线旁开2寸。","f":"①咳嗽，气喘，胸胁胀满。②乳痈。③呕吐。","k":"斜刺或平刺0.5-0.8寸。","t":""},{"c":"KI25","n":"神藏","p":"Shéncáng","m":"KI","l":"在胸部，第2肋间隙，前正中线旁开2寸。","f":"①咳嗽，气喘，胸胁胀满。②呕吐。","k":"斜刺或平刺0.5-0.8寸。","t":""},{"c":"KI26","n":"彧中","p":"Yùzhōng","m":"KI","l":"在胸部，第1肋间隙，前正中线旁开2寸。","f":"咳嗽，气喘，胸胁胀满。","k":"斜刺或平刺0.5-0.8寸。","t":""},{"c":"KI27","n":"俞府","p":"Shùfǔ","m":"KI","l":"在胸部，锁骨下缘，前正中线旁开2寸。","f":"①咳嗽，气喘，胸痛。②呕吐。","k":"斜刺或平刺0.5-0.8寸。","t":""},{"c":"PC1","n":"天池","p":"Tiānchí","m":"PC","l":"在胸部，第4肋间隙，前正中线旁开5寸。","f":"①乳痈，乳汁少。②咳嗽，气喘，胸闷，胁肋胀痛。③，瘰疬，腋肿。","k":"斜刺或平刺0.5-0.8寸。","t":""},{"c":"PC2","n":"天泉","p":"Tiānquán","m":"PC","l":"在臂前区，腋前纹头下2寸，肱二头肌的长、短头之间。","f":"①心痛，咳嗽，胸胁胀痛。②臂痛。","k":"直刺1-1.5寸。","t":""},{"c":"PC3","n":"曲泽","p":"Qūzé","m":"PC","l":"在肘前区，肘横纹上，肱二头肌腱的尺侧缘凹陷中。","f":"①心痛，心悸。，②热病，中暑。③胃痛，呕吐。④肘臂挛痛。","k":"直刺1-1.5寸，或用三棱针点刺出血。","t":"合穴"},{"c":"PC4","n":"郄门","p":"Xìmén","m":"PC","l":"在前臂前区，腕掌侧远端横纹上5寸，掌长肌腱与桡侧腕屈肌腱之间。","f":"①心痛，心悸，心烦，胸痛，癫狂痫。②咯血，衄血，吐血。","k":"直刺0.5-1寸。","t":"郄穴"},{"c":"PC5","n":"间使","p":"Jiānshǐ","m":"PC","l":"在前臂前区，腕掌侧远端横纹上3寸，掌长肌腱与桡侧腕屈肌腱之间。","f":"①心痛，心悸，心烦，癫狂痫。②热病，疟疾。③胃痛，呕吐。","k":"直刺0.5-1寸。","t":"经穴"},{"c":"PC6","n":"内关","p":"Nèiguān","m":"PC","l":"在前臂前区，腕掌侧远端横纹上2寸，掌长肌腱与桡侧腕屈肌腱之间。","f":"①心悸，心痛，心烦，胸闷。②胃痛，呕吐，呃逆。③中风，眩晕，失眠，癫狂痫。④肘臂挛痛，上肢不遂。","k":"直刺0.5-1寸。","t":"络穴，八脉交会穴（通阴维脉）"},{"c":"PC7","n":"大陵","p":"Dàlíng","m":"PC","l":"在腕前区，腕掌侧远端横纹中，掌长肌腱与桡侧腕屈肌腱之间。","f":"①心痛，心悸。②胃痛，呕吐。③癫狂痫。④胸胁痛，手腕麻痛。","k":"直刺0.3-0.5寸。","t":"输穴，原穴"},{"c":"PC8","n":"劳宫","p":"Láogōng","m":"PC","l":"在掌区，横平第3掌指关节近端，第2、3掌骨之间偏于第3掌骨。注：握拳屈指时，中指尖点到处。","f":"①口疮，口臭。②癫狂痫，热病。③心痛，心烦。④呕吐。⑤鹅掌风。","k":"直刺0.3-0.5寸。","t":"荥穴"},{"c":"PC9","n":"中冲","p":"Zhōngchōng","m":"PC","l":"在手指，中指末端最高点。","f":"①中风昏迷，舌强不语。②心痛，心烦。③晕厥，热病，中暑小儿惊风。","k":"浅刺0.1寸，或用三棱针点刺出血。","t":"井穴"},{"c":"TE1","n":"关冲","p":"Guānchōng","m":"TE","l":"在手指，第4指末节尺侧，指甲根角侧上方0.1寸（指寸）。","f":"①热病，昏厥，中暑。②头痛，目赤，耳鸣，耳聋，咽喉肿痛。","k":"浅刺0.1寸，或用三棱针点刺出血。","t":"井穴"},{"c":"TE2","n":"液门","p":"Yèmén","m":"TE","l":"在手背，第4、5指间，指蹼缘上方赤白肉际凹陷中。","f":"①头痛，目赤，耳鸣，耳聋，咽喉肿痛。②热病，疟疾。","k":"直刺0.3-0.5寸。","t":"荥穴"},{"c":"TE3","n":"中渚","p":"Zhōngzhǔ","m":"TE","l":"在手背，第4、5掌骨间，第4掌指关节近端凹陷中。","f":"①头痛，耳鸣，耳聋，目赤，咽喉肿痛。②热病，消渴，疟疾。③手指屈伸不利，肘臂、肩背疼痛。","k":"直刺0.3-0.5寸。","t":"输穴"},{"c":"TE4","n":"阳池","p":"Yángchí","m":"TE","l":"在腕后区，腕背侧远端横纹上，指伸肌腱的尺侧缘凹陷中。","f":"①耳聋，目赤肿痛，咽喉肿痛。②疟疾，消渴。③腕痛，肩臂痛。","k":"直刺0.3-0.5寸。","t":"原穴"},{"c":"TE5","n":"外关","p":"Wàiguān","m":"TE","l":"在前臂后区，腕背侧远端横纹上2寸，尺骨与桡骨间隙中点。","f":"①热病。②头痛，目赤肿痛，耳鸣，耳聋。③胸胁痛，上肢痿痹。","k":"直刺0.5-1寸。","t":"络穴，八脉交会穴（通阳维脉）"},{"c":"TE6","n":"支沟","p":"Zhīgōu","m":"TE","l":"在前臂后区，腕背侧远端横纹上3寸，尺骨与桡骨间隙中点。","f":"①便秘，呕吐。②胁肋痛，瘰疬。③耳鸣，耳聋，暴喑。④热病。","k":"直刺0.5-1寸。","t":"经穴"},{"c":"TE7","n":"会宗","p":"Huìzōng","m":"TE","l":"在前臂后区，腕背侧远端横纹上3寸，尺骨的桡侧缘。","f":"①耳鸣，耳聋。②癫痫。③上肢痹痛。","k":"直刺0.5-1寸。","t":"郄穴"},{"c":"TE8","n":"三阳络","p":"Sānyángluò","m":"TE","l":"在前臂后区，腕背侧远端横纹上4寸，尺骨与桡骨间隙中点。","f":"①耳聋，暴喑，齿痛。②上肢痹痛。","k":"直刺0.5-1寸。","t":""},{"c":"TE9","n":"四渎","p":"Sìdú","m":"TE","l":"在前臂后区，肘尖（尺骨鹰嘴的尖端）下5寸，尺骨与桡骨间隙中点。","f":"①耳聋，暴喑，齿痛，咽喉肿痛。②上肢痹痛。","k":"直刺0.5-1寸。","t":""},{"c":"TE10","n":"天井","p":"Tiānjǐng","m":"TE","l":"在肘后区，肘尖（尺骨鹰嘴的尖端）上1寸凹陷中。注：屈肘90°时，鹰嘴窝中。","f":"①耳聋，偏头痛。②癫痫。③瘰疬。④心痛，胸胁痛，肩臂痛。","k":"直刺0.5-1寸。","t":"合穴"},{"c":"TE11","n":"清泠渊","p":"Qīnglěngyuān","m":"TE","l":"在臂后区，肘尖（尺骨鹰嘴的尖端）与肩峰角连线上，肘尖上2寸。","f":"①头痛，目痛，胁痛。②肩臂痛。","k":"直刺0.5-1寸。","t":""},{"c":"TE12","n":"消泺","p":"Xiāoluò","m":"TE","l":"在臂后区，肘尖(尺骨鹰嘴的尖端)与肩峰角连线上，肘尖上5寸。","f":"①头痛，颈项强痛，齿痛。②肩臂痛。","k":"直刺0.8-1.2寸。","t":""},{"c":"TE13","n":"臑会","p":"Nàohuì","m":"TE","l":"在臂后区，肩峰角下3寸，三角肌的后下缘。","f":"①瘿气，瘰疬。②上肢痿痹。","k":"直刺0.8-1.2寸。","t":""},{"c":"TE14","n":"肩髎","p":"Jiānliáo","m":"TE","l":"在三角肌区，肩峰角与肱骨大结节两骨间凹陷中。注:屈臂外展时，肩峰外侧缘前后端呈现两个凹陷，前一较深凹陷为肩髃，后一凹陷即本穴。","f":"肩臂挛痛、不遂。","k":"直刺0.8-1.2寸。","t":""},{"c":"TE15","n":"天髎","p":"Tiānliáo","m":"TE","l":"在肩胛区，肩胛骨上角骨际凹陷中。注:正坐垂肩，肩井与曲垣连线的中点。","f":"肩臂痛，颈项强痛。","k":"直刺0.5-0.8寸。","t":"手少阳经、阳维脉交会穴"},{"c":"TE16","n":"天牖","p":"Tiānyǒu","m":"TE","l":"在颈部，横平下颌角，胸锁乳突肌的后缘凹陷中。","f":"①头痛，眩晕，目痛，耳聋，咽喉肿痛。②瘰疬。③颈项强痛。","k":"直刺0.5-1寸。","t":""},{"c":"TE17","n":"翳风","p":"Yìfēng","m":"TE","l":"在颈部，耳垂后方，乳突下端前方凹陷中。","f":"①耳鸣，耳聋，聤耳。②口眼㖞斜，口噤，颊肿，齿痛。③，呃逆。④瘰疬。","k":"直刺0.5-1寸。","t":"手少阳经、足少阳经交会穴"},{"c":"TE18","n":"瘛脉","p":"Qìmài","m":"TE","l":"在头部，乳突中央，角孙与翳风沿耳轮弧形连线的上2/3与下1/3的交点处。","f":"①耳鸣，耳聋，头痛。②小儿惊风。","k":"平刺0.3-0.5寸，或点刺出血。","t":""},{"c":"TE19","n":"颅息","p":"Lúxī","m":"TE","l":"在头部，角孙与翳风沿耳轮弧形连线的上1/3与下2/3的交点处。","f":"①耳鸣，耳聋，头痛。②小儿惊风。","k":"平刺0.3-0.5寸。","t":""},{"c":"TE20","n":"角孙","p":"Jiǎosūn","m":"TE","l":"在头部，耳尖正对发际处。","f":"①目翳，齿痛，颊肿。②偏头痛，项强。","k":"平刺0.3-0.5寸。","t":"手少阳经、足少阳经、手阳明经交会穴"},{"c":"TE21","n":"耳门","p":"Ěrmén","m":"TE","l":"在耳区，耳屏上切迹与下颌骨髁突之间的凹陷中。注:微张口，耳屏上切迹前的凹陷中，听宫直上。","f":"①耳鸣，耳聋，聤耳。②齿痛，面痛，颊肿痛。","k":"微张口，直刺0.5-1寸。","t":""},{"c":"TE22","n":"耳和髎","p":"Ěrhéliáo","m":"TE","l":"在头部，鬓发后缘，耳郭根的前方，颞浅动脉的后缘。","f":"头痛，耳鸣，牙关紧闭，口眼㖞斜。","k":"避开动脉，斜刺或平刺0.3-0.5寸。","t":"手少阳经、足少阳经、手太阳经交会穴"},{"c":"TE23","n":"丝竹空","p":"Sīzhúkōng","m":"TE","l":"在面部，眉梢凹陷中。","f":"①目赤肿痛，眼睑瞤动。②头痛，眩晕，癫狂痫。","k":"平刺0.5-1寸。不灸。","t":""},{"c":"GB1","n":"瞳子髎","p":"Tóngzǐliáo","m":"GB","l":"在面部，目外眦外侧0.5寸，当眶外侧缘凹陷处。","f":"①目赤肿痛，目翳，青盲。②头痛。","k":"直刺或平刺0.3-0.5寸。","t":"手太阳经、手少阳经、足少阳经交会穴"},{"c":"GB2","n":"听会","p":"Tīnghuì","m":"GB","l":"在面部，耳屏间切迹与下颌骨髁突之间的凹陷中。注:张口，耳屏间切迹前方的凹陷中，听宫直下。","f":"①耳鸣，耳聋，聤耳。②齿痛，口眼㖞斜，面痛。","k":"张口，直刺0.5-1寸。","t":""},{"c":"GB3","n":"上关","p":"Shàngguan","m":"GB","l":"在面部，颧弓上缘中央凹陷中。注：下关直上，颧弓上缘凹陷中。","f":"①耳鸣，耳聋，聤耳。②口眼㖞斜，口噤，齿痛，面痛。③癫狂痫。","k":"直刺0.5-1寸。","t":"手少阳经、足少阳经、足阳明经交会穴"},{"c":"GB4","n":"颔厌","p":"Hànyàn","m":"GB","l":"在头部，从头维至曲鬓的弧形连线(其弧度与鬓发弧度相应)的上1/4与下3/4的交点处。","f":"①偏头痛，眩晕。②目外眦痛，耳鸣。","k":"平刺0.5-0.8寸。","t":"手少阳经、足少阳经、足阳明经交会穴"},{"c":"GB5","n":"悬颅","p":"Xuánlú","m":"GB","l":"在头部，从头维至曲鬓的弧形连线(其弧度与鬓发弧度相应)的中点处。","f":"①偏头痛。②目痛，齿痛。③热病。","k":"平刺0.5-0.8寸。","t":""},{"c":"GB6","n":"悬厘","p":"Xuánlí","m":"GB","l":"在头部，从头维至曲鬓的弧形连线(其弧度与鬓发弧度相应)的上3/4与下1/4的交点处。","f":"①偏头痛。②目痛。③热病。","k":"平刺0.5-0.8寸。","t":"手少阳经、足少阳经、足阳明经交会穴"},{"c":"GB7","n":"曲鬓","p":"Qūbìn","m":"GB","l":"在头部，耳前鬓角发际后缘与耳尖水平线的交点处。","f":"①偏头痛。②颊肿，齿痛，口噤。","k":"平刺0.5-0.8寸。","t":"足少阳经、足太阳经交会穴"},{"c":"GB8","n":"率谷","p":"Shuàigǔ","m":"GB","l":"在头部，耳尖直上入发际1.5寸。注:角孙直上1.5寸。","f":"①偏正头痛，眩晕，耳鸣，耳聋。②小儿惊风。③呕吐。","k":"平刺0.5-0.8寸。","t":"足少阳经、足太阳经交会穴"},{"c":"GB9","n":"天冲","p":"Tiānchōng","m":"GB","l":"在头部，耳根后缘直上，入发际2寸。","f":"①头痛，耳鸣，耳聋，牙龈肿痛。②癫痫。","k":"平刺0.5-0.8寸。","t":"足少阳经、足太阳经交会穴"},{"c":"GB10","n":"浮白","p":"Fúbái","m":"GB","l":"在头部，耳后乳突的后上方，从天冲至完骨的弧形连线(其弧度与耳郭弧度相应)的上1/3与下2/3交点处。","f":"①头痛，耳鸣，耳聋，目痛，齿痛。②瘿气。","k":"平刺0.5-0.8寸。","t":"足少阳经、足太阳经交会穴"},{"c":"GB11","n":"头窍阴","p":"Tóuqiàoyīn","m":"GB","l":"在头部，耳后乳突的后上方，从天冲到完骨的弧形连线(其弧度与耳郭弧度相应)的上2/3与下1/3交点处。","f":"头痛，颈项强痛。","k":"平刺0.5-0.8寸。","t":"足少阳经、足太阳经交会穴"},{"c":"GB12","n":"完骨","p":"Wánggǔ","m":"GB","l":"在头部，耳后乳突的后下方凹陷中。","f":"①头痛，颈项强痛。②齿痛，咽喉肿痛，口眼㖞斜，口噤，颊肿。③癫狂痫。","k":"直刺0.5-0.8寸。","t":"足少阳经、足太阳经交会穴"},{"c":"GB13","n":"本神","p":"Běnshén","m":"GB","l":"在头部，前发际上0.5寸，头正中线旁开3寸。注：神庭与头维弧形连线（其弧度与前发际弧度相应）的内2∕3与外1∕3的交点处。","f":"①头痛，眩晕。②癫痫，小儿惊风。③颈项强痛。","k":"平刺0.5-0.8寸。","t":"足少阳经、阳维脉交会穴"},{"c":"GB14","n":"阳白","p":"Yángbái","m":"GB","l":"在头部，眉上1寸，瞳孔直上。","f":"①头痛，眩晕。②目痛，目翳，眼睑下垂，面瘫。","k":"平刺0.3-0.5寸。","t":"足少阳经、阳维脉交会穴"},{"c":"GB15","n":"头临泣","p":"Tóulínqì","m":"GB","l":"在头部，前发际上0.5寸，瞳孔直上。注：神庭与头维弧形连线（其弧度与前发际弧度相应）的中点处。","f":"①头痛，眩晕。②目痛，流泪，目翳，鼻塞，鼻渊。③小儿惊风。","k":"平刺0.3-0.5寸。","t":"足少阳、足太阳、阳维脉交会穴"},{"c":"GB16","n":"目窗","p":"Mùchuāng","m":"GB","l":"在头部，前发际上1.5寸，瞳孔直上。","f":"①目痛，目视不明。②头痛，眩晕。","k":"平刺0.3-0.5寸。","t":"足少阳经、阳维脉交会穴"},{"c":"GB17","n":"正营","p":"Zhèngyíng","m":"GB","l":"在头部，前发际上2.5寸，瞳孔直上。","f":"①头痛，眩晕。②齿痛。","k":"平刺0.3-0.5寸。","t":"足少阳经、阳维脉交会穴"},{"c":"GB18","n":"承灵","p":"Chénglíng","m":"GB","l":"在头部，前发际上4寸，瞳孔直上。","f":"头痛，眩晕，鼻塞，鼻衄。","k":"平刺0.3-0.5寸。","t":"足少阳经、阳维脉交会穴"},{"c":"GB19","n":"脑空","p":"Nǎokōng","m":"GB","l":"在头部，横平枕外隆凸的上缘，风池直上。注：横平脑户、玉枕。","f":"①头痛，眩晕，目痛，耳聋。②癫狂痫。③颈项强痛。","k":"平刺0.3-0.5寸。","t":"足少阳经、阳维脉交会穴"},{"c":"GB20","n":"风池","p":"Fēngchí","m":"GB","l":"在颈后区，枕骨之下，胸锁乳突肌上端与斜方肌上端之间的凹陷中。","f":"①头痛，眩晕，癫狂痫，中风。②目赤肿痛，鼻塞，鼻衄，耳鸣，耳聋。③热病。④颈项强痛。","k":"针尖微向下，向鼻尖方向斜刺0.8-1.2寸，或平刺透风府穴。","t":"足少阳经、阳维脉交会穴"},{"c":"GB21","n":"肩井","p":"Jiānjǐng","m":"GB","l":"在肩胛区，第7颈椎棘突与肩峰最外侧点连线的中点。","f":"①头痛，眩晕。②乳痈，乳汁少，滞产。③瘰疬，颈项强痛，肩背疼痛，上肢不遂。","k":"斜刺0.5-0.8寸，切忌深刺，捣刺。孕妇禁用。","t":"手少阳经、足少阳经、足阳明经、阳维脉交会穴"},{"c":"GB22","n":"渊腋","p":"Yuānyè","m":"GB","l":"在胸外侧区，第4肋间隙中，在腋中线上。","f":"①胸胁胀痛，腋肿。②上肢痹痛。","k":"平刺0.5-0.8寸。","t":""},{"c":"GB23","n":"辄筋","p":"Zhéjīn","m":"GB","l":"在胸外侧区，第4肋间隙中，在腋中线前1寸。","f":"胸满，胁痛，腋肿，气喘。","k":"平刺0.5-0.8寸。","t":""},{"c":"GB24","n":"日月","p":"Rìyuè","m":"GB","l":"在胸部，第7肋间隙中，前正中线旁开4寸。注:女性在锁骨中线与第7肋间隙交点处。","f":"①黄疸，呕吐，吞酸，呃逆。②胁肋胀痛。","k":"斜刺0.5-0.8寸。","t":"胆之募穴，足少阳经、足太阴经交会穴"},{"c":"GB25","n":"京门","p":"Jīngmén","m":"GB","l":"在上腹部，第12肋骨游离端的下际。","f":"①小便不利，水肿。②腹胀，泄泻，肠鸣，呕吐。③，腰痛，胁痛。","k":"直刺0.5-1寸。","t":"肾之募穴"},{"c":"GB26","n":"带脉","p":"Dàimài","m":"GB","l":"在侧腹部，第11肋骨游离端垂线与脐水平线的交点上。注:章门直下，横平神阙。","f":"①带下，月经不调，阴挺，疝气。②胁痛，腰痛。","k":"直刺0.8-1寸。","t":"足少阳经、带脉交会穴"},{"c":"GB27","n":"五枢","p":"Wǔshū","m":"GB","l":"在下腹部，横平脐下3寸，髂前上棘内侧。","f":"①腹痛，腰痛。②带下，月经不调，阴挺，疝气。","k":"直刺1-1.5寸。","t":"足少阳经、带脉交会穴"},{"c":"GB28","n":"维道","p":"Wéidào","m":"GB","l":"在下腹部，髂前上棘内下0.5寸。","f":"①呕吐，食欲不振。②水肿，腰腿痛。","k":"直刺1-1.5寸。","t":"足少阳经、带脉交会穴"},{"c":"GB29","n":"居髎","p":"Jūliáo","m":"GB","l":"在臀区，髂前上棘与股骨大转子最凸点连线的中点处。","f":"①腰腿痛，下肢痿痹。②疝气。","k":"直刺1-1.5寸。","t":"足少阳经、阳跷脉交会穴"},{"c":"GB30","n":"环跳","p":"Huántiào","m":"GB","l":"在臀区，股骨大转子最凸点与骶管裂孔连线的外1/3与内2/3交点处。","f":"腰胯疼痛，下肢痿痹。","k":"直刺2-3寸。","t":"足少阳经、足太阳经交会穴"},{"c":"GB31","n":"风市","p":"Fēngshì","m":"GB","l":"在股部，直立垂手，掌心贴于大腿时，中指尖所指凹陷中，髂胫束后缘。","f":"①遍身瘙痒。②下肢痿痹。","k":"直刺1-2寸。","t":""},{"c":"GB32","n":"中渎","p":"Zhōngdú","m":"GB","l":"在股部，腘横纹上7寸，髂胫束后缘。","f":"下肢痿痹。","k":"直刺1-2寸。","t":""},{"c":"GB33","n":"膝阳关","p":"Xīyángguān","m":"GB","l":"在膝部，股骨外上髁后上缘，股二头肌腱与髂胫束之间的凹陷中。","f":"膝腘肿痛、挛急，小腿麻木。","k":"直刺1-1.5寸。","t":""},{"c":"GB34","n":"阳陵泉","p":"Yánglíngquán","m":"GB","l":"在小腿外侧，腓骨头前下方凹陷中。","f":"①黄疸，口苦，呕吐，吞酸，胁肋疼痛。②下肢痿痹，膝肿痛。③小儿惊风。","k":"直刺1-1.5寸。","t":"，合穴，胆之下合穴，八会穴（筋会）"},{"c":"GB35","n":"阳交","p":"Yángjiāo","m":"GB","l":"在小腿外侧，外踝尖上7寸，腓骨后缘。","f":"①胸胁胀满。②下肢痿痹。③癫狂。","k":"直刺1-1.5寸。","t":"阳维脉郄穴"},{"c":"GB36","n":"外丘","p":"Wàiqiū","m":"GB","l":"在小腿外侧，外踝尖上7寸，腓骨前缘。","f":"①胸胁胀满。②下肢痿痹。③癫狂。","k":"直刺1-1.5寸。","t":"郄穴"},{"c":"GB37","n":"光明","p":"Guāngmíng","m":"GB","l":"在小腿外侧，外踝尖上5寸，腓骨前缘。","f":"①目痛，夜盲，目视不明，目翳。②乳疾。③下肢痿痹。","k":"直刺1-1.5寸。","t":"络穴"},{"c":"GB38","n":"阳辅","p":"Yángfǔ","m":"GB","l":"在小腿外侧，外踝尖上4寸，腓骨前缘。","f":"①咽喉肿痛。②腋下肿痛，胸胁胀痛，瘰疬。③下肢痿痹。","k":"直刺0.8-1.2寸。","t":"经穴"},{"c":"GB39","n":"悬钟","p":"Xuánzhōng","m":"GB","l":"在小腿外侧，外踝尖上3寸，腓骨前缘。","f":"①腹满，食欲不振。②胸胁胀痛，下肢痿痹。","k":"直刺0.5-0.8寸。","t":"八会穴（髓会）"},{"c":"GB40","n":"丘墟","p":"Qiūxū","m":"GB","l":"在踝区，外踝的前下方，趾长伸肌腱的外侧凹陷中。","f":"①胸胁胀痛。②下肢痿痹，外踝肿痛。③疟疾。④目视不明，目翳。","k":"直刺0.5-0.8寸。","t":"原穴"},{"c":"GB41","n":"足临泣","p":"Zúlínqì","m":"GB","l":"在足背，第4、5跖骨底结合部的前方，第5趾长伸肌腱外侧凹陷中。","f":"①偏头痛，眩晕。②乳痈，月经不调。③胁肋疼痛，足痛。④瘰疬。","k":"直刺0.3-0.5寸。","t":"输穴，八脉交会穴（通带脉）"},{"c":"GB42","n":"地五会","p":"Dìwǔhuì","m":"GB","l":"在足背，第4、5跖骨间，第4跖趾关节近端凹陷中。","f":"①目赤肿痛。②乳痈。③腋肿痛。","k":"直刺0.3-0.5寸。","t":""},{"c":"GB43","n":"侠溪","p":"Xiáxī","m":"GB","l":"在足背，第4、5趾间，趾蹼缘后方赤白肉际处。","f":"①头痛，眩晕，目赤肿痛，耳鸣，耳聋。②胸胁疼痛，足痛。③热病。④乳痈。","k":"直刺0.3-0.5寸。","t":"荥穴"},{"c":"GB44","n":"足窍阴","p":"Zúqiàoyīn","m":"GB","l":"在足趾，第4趾末节外侧，趾甲根角侧后方0.1寸（指寸）。","f":"①头痛，目赤肿痛，耳鸣，耳聋。②胸胁痛。③足痛。","k":"浅刺0.1-0.2寸，或点刺出血。","t":"井穴"},{"c":"LR1","n":"大敦","p":"Dàdūn","m":"LR","l":"在足趾，大趾末节外侧，趾甲根角侧后方0.1寸（指寸）。","f":"①疝气，癃闭，遗尿，崩漏，月经不调，阴挺。②癫痫，小儿惊风。","k":"浅刺0.1-0.2寸，或点刺出血。","t":"井穴"},{"c":"LR2","n":"行间","p":"Xíngjiān","m":"LR","l":"在足背，第1、2趾之间，趾蹼缘的后方赤白肉际处。","f":"①目赤肿痛。②中风，癫痫。③月经不调，带下，疝气，遗尿，癃闭。④胁肋疼痛，黄疸。","k":"直刺0.5-0.8寸。","t":"荥穴"},{"c":"LR3","n":"太冲","p":"Tàichōng","m":"LR","l":"在足背，第1、2跖骨间，跖骨底结合部前方凹陷中，或触及动脉搏动。注：从第1、2跖骨间向后推移至底部的凹陷中取穴。","f":"①头痛，眩晕，目赤肿痛。②月经不调，疝气，遗尿，癃闭。③小儿惊风。④胁痛，黄疸，腹胀，呕逆。⑤下肢痿痹。","k":"直刺0.5-1寸。","t":"输穴，原穴"},{"c":"LR4","n":"中封","p":"Zhōngfēng","m":"LR","l":"在踝区，内踝前，胫骨前肌肌腱的内侧缘凹陷中。注：商丘与解溪中间。","f":"①疝气，遗精，小便不利。②下肢痿痹，足踝肿痛。","k":"直刺0.5-0.8寸。","t":"经穴"},{"c":"LR5","n":"蠡沟","p":"Lígōu","m":"LR","l":"在小腿内侧，内踝尖上5寸，胫骨内侧面的中央。","f":"①睾丸肿痛，阴痒，疝气，小便不利，遗尿，月经不调，带下。②足胫疼痛。","k":"平刺0.5-0.8寸。","t":"络穴"},{"c":"LR6","n":"中都","p":"Zhōngdū","m":"LR","l":"在小腿内侧，内踝尖上7寸，胫骨内侧面的中央。","f":"①疝气，崩漏。②腹痛，泄泻。③下肢痿痹。","k":"平刺0.5-0.8寸。","t":"郄穴"},{"c":"LR7","n":"膝关","p":"Xīguān","m":"LR","l":"在膝部，胫骨内侧髁的下方，阴陵泉后1寸。","f":"疝气，少腹痛，膝肿痛，下肢痿痹。","k":"直刺1-1.5寸。","t":""},{"c":"LR8","n":"曲泉","p":"Qūquán","m":"LR","l":"在膝部，腘横纹内侧端，半腱肌肌腱内缘凹陷中。","f":"①疝气，小便不利，月经不调，带下，阴挺，阴痒，遗精，阳痿。②膝股疼痛，下肢痿痹。","k":"直刺0.8-1寸。","t":"合穴"},{"c":"LR9","n":"阴包","p":"Yīnbāo","m":"LR","l":"在股前区，髌底上4寸，股薄肌与缝匠肌之间。","f":"①月经不调，遗尿，小便不利。②腰骶痛引小腹，膝股疼痛。","k":"直刺1-2寸。","t":""},{"c":"LR10","n":"足五里","p":"Zúwǔlǐ","m":"LR","l":"在股前区，气冲直下3寸，动脉搏动处。","f":"少腹痛，睾丸肿痛，阴挺，小便不利。","k":"直刺1-1.5寸。","t":""},{"c":"LR11","n":"阴廉","p":"Yīnlián","m":"LR","l":"在股前区，气冲直下2寸。","f":"月经不调，不孕，少腹痛。","k":"直刺1-2寸。","t":""},{"c":"LR12","n":"急脉","p":"Jímài","m":"LR","l":"在腹股沟区，横平耻骨联合上缘，前正中线旁开2.5寸。","f":"少腹痛，前阴痛，疝气。","k":"避开动脉，直刺0.5-0.8寸。","t":""},{"c":"LR13","n":"章门","p":"Zhāngmén","m":"LR","l":"在侧腹部，在第11肋游离端的下际。","f":"①腹痛，腹胀，呕吐，肠鸣。②痞块，胁痛，黄疸。","k":"直刺0.8-1寸。","t":"脾之募穴，八会穴（脏会），足厥阴经、足少阳经交会穴"},{"c":"LR14","n":"期门","p":"Qīmén","m":"LR","l":"在胸部，第6肋间隙，前正中线旁开4寸。注：女性在锁骨中线与第6肋间隙交点处。","f":"①胸胁胀痛，呃逆。②腹胀，呕吐，泄泻。③乳痈。","k":"斜刺0.5-0.8寸。","t":"肝之募穴，足厥阴经、足太阴经、阴维脉交会穴"},{"c":"DU1","n":"长强","p":"Chángqiáng","m":"DU","l":"在尾骨下方，尾骨端与肛门连线的中点处","f":"①痔疾，脱肛，泄泻，便秘，便血。②癫狂痫，小儿惊风。③腰痛，尾骶骨痛。","k":"斜刺，针尖向上与骶骨平行刺入0.5-1寸。不得刺穿直肠，以防感染。","t":"络穴，督脉、足少阳经、足少阴经交会穴"},{"c":"DU2","n":"腰俞","p":"Yāoshū","m":"DU","l":"在骶区，正对骶管裂孔，后正中线上。注:臀裂正上方的小凹陷即为本穴。","f":"①腰脊强痛，下肢痿痹。②痔疾。③月经不调。","k":"向上斜刺0.5-1寸。","t":""},{"c":"DU3","n":"腰阳关","p":"Yāoyángguān","m":"DU","l":"在脊柱区，第4腰椎棘突下凹陷中，后正中线上。","f":"①腰骶痛，下肢痿痹。②月经不调，带下，遗精，阳痿。","k":"直刺0.5-1寸。","t":""},{"c":"DU4","n":"命门","p":"Mìngmén","m":"DU","l":"在脊柱区，第2腰椎棘突下凹陷中，后正中线上。","f":"①腰痛，下肢痿痹。②遗精，阳痿，早泄，月经不调，带下，遗尿，小便不利。","k":"直刺0.5-1寸。","t":""},{"c":"DU5","n":"悬枢","p":"Xuánshū","m":"DU","l":"在脊柱区，第1腰椎棘突下凹陷中，后正中线上。","f":"①腹痛，泄泻。②腰脊痛。","k":"直刺0.5-1寸。","t":""},{"c":"DU6","n":"脊中","p":"Jǐzhōng","m":"DU","l":"在脊柱区，第11胸椎棘突下凹陷中，后正中线上。","f":"①泄泻，黄疸。②癫痫。③腰背痛。","k":"向上斜刺0.5-1寸。","t":""},{"c":"DU7","n":"中枢","p":"Zhōngshū","m":"DU","l":"在脊柱区，第l0胸椎棘突下凹陷中，后正中线上。","f":"呕吐，腹满，黄疸，腰背痛。","k":"向上斜刺0.5-1寸。","t":""},{"c":"DU8","n":"筋缩","p":"Jīnsuō","m":"DU","l":"在脊柱区，第9胸椎棘突下凹陷中，后正中线上。","f":"①脊强。②癫痫，小儿惊风。","k":"向上斜刺0.5-1寸。","t":""},{"c":"DU9","n":"至阳","p":"Zhìyáng","m":"DU","l":"在脊柱区，第7胸椎棘突下凹陷中，后正中线上。","f":"①黄疸，身热。②身重，腰背痛。","k":"向上斜刺0.5-1寸。","t":""},{"c":"DU10","n":"灵台","p":"Língtái","m":"DU","l":"在脊柱区，第6胸椎棘突下凹陷中，后正中线上。","f":"①咳嗽，气喘。②脊痛。","k":"向上斜刺0.5-1寸。","t":""},{"c":"DU11","n":"神道","p":"Shéndào","m":"DU","l":"在脊柱区，第5胸椎棘突下凹陷中，后正中线上。","f":"①心悸，健忘。②小儿惊风。③脊痛。","k":"向上斜刺0.5-1寸。","t":""},{"c":"DU12","n":"身柱","p":"Shēnzhù","m":"DU","l":"在脊柱区，第3胸椎棘突下凹陷中，后正中线上。","f":"①咳嗽，气喘。②身热，癫狂，小儿惊风。③脊痛。","k":"向上斜刺0.5-1寸。","t":""},{"c":"DU13","n":"陶道","p":"Táodào","m":"DU","l":"在脊柱区，第1胸椎棘突下凹陷中，后正中线上。","f":"①热病，骨蒸潮热，疟疾。②头痛，脊强。","k":"向上斜刺0.5-1寸。","t":"督脉、足太阳经交会穴"},{"c":"DU14","n":"大椎","p":"Dàzhuī","m":"DU","l":"在脊柱区，第7颈椎棘突下凹陷中，后正中线上。","f":"①热病，疟疾，骨蒸。②咳嗽，气喘。③小儿惊风，癫痫。④颈项强痛，脊痛。","k":"向上斜刺0.5-1寸。","t":"督脉、手足三阳经交会穴"},{"c":"DU15","n":"哑门","p":"Yǎmén","m":"DU","l":"在颈后区，第2颈椎棘突上际凹陷中，后正中线上。注:后发际正中直上0.5寸。","f":"①暴喑，舌强不语。②头痛，颈项强痛。","k":"伏案正坐位，使头微前倾，项肌放松，向下颌方向缓慢刺入0.5-1寸，针尖不可向前上方深刺，以免伤及延髓。","t":"督脉、阳维脉交会穴"},{"c":"DU16","n":"风府","p":"Fēngfǔ","m":"DU","l":"在颈后区，枕外隆凸直下，两侧斜方肌之间凹陷中。注:正坐，头稍仰，使项部斜方肌松弛，从项后发际正中上推至枕骨而止即是本穴。","f":"①头痛，眩晕，癫狂痫，中风。②暴喑，舌强不语，鼻衄，咽喉肿痛。③脊痛，颈项强痛。","k":"伏案正坐位，使头微前倾，项肌放松，向下颌方向缓慢刺入0.5-1寸，针尖不可向上，以免伤及延髓。","t":"督脉、阳维脉交会穴"},{"c":"DU17","n":"脑户","p":"Nǎohù","m":"DU","l":"在头部，枕外隆凸的上缘凹陷中。","f":"①头痛，眩晕。②癫狂痫。③颈项强痛。","k":"平刺0.5-0.8寸。","t":"督脉、足太阳经交会穴"},{"c":"DU18","n":"强间","p":"Qiángjiān","m":"DU","l":"在头部，后发际正中直上4寸。","f":"①头痛。②癫狂痫。③颈项强痛。","k":"平刺0.5-0.8寸。","t":""},{"c":"DU19","n":"后顶","p":"Hòudǐng","m":"DU","l":"在头部，后发际正中直上5.5寸。","f":"①头痛，眩晕。②癫狂痫。③颈项强痛。","k":"平刺0.5-0.8寸。","t":""},{"c":"DU20","n":"百会","p":"Bǎihuì","m":"DU","l":"在头部，前发际正中直上5寸。注:两耳尖向上连线的中点。","f":"①头痛，眩晕，中风，癫狂痫，惊风，痴呆，失眠，健忘。②目痛，耳鸣，鼻塞。③脱肛，阴挺，久泻。","k":"平刺0.5-0.8寸。","t":"督脉、足太阳经交会穴"},{"c":"DU21","n":"前顶","p":"Qiándǐng","m":"DU","l":"在头部，前发际正中直上3.5寸。","f":"①头痛，眩晕。②面肿，鼻渊。","k":"平刺0.3-0.5寸。","t":""},{"c":"DU22","n":"囟会","p":"Xìnhuì","m":"DU","l":"在头部，前发际正中直上2寸。","f":"①头痛，眩晕，癫狂痫。②鼻渊，鼻衄。","k":"平刺0.5-0.8寸，小儿禁针。","t":""},{"c":"DU23","n":"上星","p":"Shàngxīng","m":"DU","l":"在头部，前发际正中直上1寸。","f":"①鼻渊，鼻衄，目痛。②头痛，眩晕，癫狂。③热病，疟疾。","k":"平刺0.5-0.8寸。","t":""},{"c":"DU24","n":"神庭","p":"Shéntíng","m":"DU","l":"在头部，前发际正中直上0.5寸。","f":"①头痛，眩晕，失眠，癫狂痫。②鼻渊，鼻衄。","k":"平刺0.3-0.5寸。","t":"督脉、足太阳经、足阳明经交会穴"},{"c":"DU25","n":"素髎","p":"Sùliáo","m":"DU","l":"在面部，鼻尖的正中央。","f":"①鼻塞，鼻渊，鼻衄。②惊厥，昏迷。","k":"向上斜刺0.3-0.5寸，或点刺出血。一般不灸。","t":""},{"c":"DU26","n":"水沟","p":"Shuǐgōu","m":"DU","l":"在面部，人中沟的上1/3与中1/3交点处。","f":"①昏迷，晕厥，中风，癫狂痫。②口眼㖞斜，流涎，口噤，鼻塞，鼻衄。③腰脊强痛。④消渴，水肿。","k":"向上斜刺0.3-0.5寸或用指甲按掐。一般不灸。","t":"督脉、手阳明经、足阳明经交会穴"},{"c":"DU27","n":"兑端","p":"Duìduān","m":"DU","l":"在面部，上唇结节的中点。","f":"①齿痛，口臭，口噤。②癫痫。","k":"斜刺0.2-0.3寸。不灸。","t":""},{"c":"DU28","n":"龈交","p":"Yínjiāo","m":"DU","l":"在上唇内，上唇系带与上牙龈的交点。","f":"①牙龈肿痛，鼻塞，鼻衄。②癫狂痫。","k":"向上斜刺0.2-0.3寸。不灸。","t":""},{"c":"DU29","n":"印堂","p":"Yìntáng","m":"DU","l":"在头部，两眉毛内侧端中间的凹陷中。注：左右攒竹连线的中点。","f":"①头痛，眩晕，失眠，②鼻衄，鼻渊。③小儿惊风。","k":"提捏进针，从上向下平刺，或向左、右透刺攒竹、睛明等，深0.5-1寸。","t":""},{"c":"RN1","n":"会阴","p":"Huìyīn","m":"RN","l":"在会阴部，男性在阴囊根部与肛门连线的中点，女性在大阴唇后联合与肛门连线的中点。","f":"①小便不利，遗精，阳痿，月经不调，阴痛，阴痒。②痔疾。","k":"直刺0.5-1寸，孕妇慎用。","t":""},{"c":"RN2","n":"曲骨","p":"Qūgǔ","m":"RN","l":"在前正中线上，耻骨联合上缘的中点处","f":"月经不调，带下，小便不利，遗尿，遗精，阳痿。","k":"直刺0.5-1寸，需在排尿后进行针刺。孕妇禁针。","t":""},{"c":"RN3","n":"中极","p":"Zhōngjí","m":"RN","l":"在下腹部，前正中线上，当脐中下4寸","f":"①癃闭，遗尿。②月经不调，痛经，闭经，崩漏，带下，阴挺，不孕，遗精，阳痿，疝气。","k":"直刺1-1.5寸，需在排尿后进行针刺，孕妇禁针。","t":"膀胱募穴，任脉、足三阴经交会穴"},{"c":"RN4","n":"关元","p":"Guānyuán","m":"RN","l":"在下腹部，前正中线上，当脐中下3寸","f":"①月经不调，痛经，闭经，崩漏，带下，阴挺，不孕，遗尿，小便频数，癃闭，疝气，阳痿，遗精。②少腹疼痛，腹泻。③虚劳羸瘦，眩晕，中风脱证。","k":"直刺1-2寸，需排尿后进行针刺，孕妇慎用。","t":"小肠募穴，任脉、足三阴经交会穴"},{"c":"RN5","n":"石门","p":"Shímén","m":"RN","l":"在下腹部，前正中线上，当脐中下2寸","f":"①小便不利，遗精，阳痿，月经不调，不孕，产后恶露不净，疝气。②腹痛，水肿，泄泻。","k":"直刺1-2寸。孕妇慎用。","t":"三焦募穴"},{"c":"RN6","n":"气海","p":"Qìhǎi","m":"RN","l":"在下腹部，前正中线上，当脐中下1.5寸","f":"①月经不调，痛经，崩漏，带下，恶露不尽，阴挺，遗尿，癃闭，疝气，阳痿，遗精。②少腹疼痛，腹泻。③虚劳羸瘦，虚脱，中风脱证。","k":"直刺1-2寸。","t":""},{"c":"RN7","n":"阴交","p":"Yīnjiāo","m":"RN","l":"在下腹部，前正中线上，当脐中下1寸","f":"①腹痛，水肿。②月经不调，带下，疝气小便不利。","k":"直刺1-2寸。","t":"任脉、冲脉、足少阴经交会穴"},{"c":"RN8","n":"神阙","p":"Shénquè","m":"RN","l":"在腹中部，脐中央","f":"①脐周痛，腹胀，肠鸣，泄泻。②水肿，小便不利。②中风脱证。","k":"一般不针刺，宜灸。","t":""},{"c":"RN9","n":"水分","p":"Shuǐfēn","m":"RN","l":"在上腹部，前正中线上，当脐中上1寸","f":"①腹痛，腹满，腹胀。②水肿，小便不利。","k":"直刺1-2寸。","t":""},{"c":"RN10","n":"下脘","p":"Xiàwǎn","m":"RN","l":"在上腹部，前正中线上，当脐中上2寸","f":"呕吐，腹痛，腹胀，食欲不振，消瘦。","k":"直刺1-2寸。","t":"任脉、足太阴经交会穴"},{"c":"RN11","n":"建里","p":"Jiànlǐ","m":"RN","l":"在上腹部，前正中线上，当脐中上3寸","f":"胃痛，腹痛，腹胀，肠鸣，呕吐，食欲不振。","k":"直刺1-1.5寸。","t":""},{"c":"RN12","n":"中脘","p":"Zhōngwǎn","m":"RN","l":"在上腹部，前正中线上，当脐中上4寸","f":"①胃痛，呕吐，腹胀，食欲不振，肠鸣，泄泻，便秘，黄疸。②痰饮诸证。","k":"直刺1-1.5寸。","t":"胃之募穴，八会穴（腑会），任脉、手太阳经、手少阳经、足阳明经交会穴"},{"c":"RN13","n":"上脘","p":"Shàngwǎn","m":"RN","l":"在上腹部，前正中线上，当脐中上5寸","f":"①胃痛，呕吐，腹胀，食欲不振，吐血，黄疸。②癫狂痫。，","k":"直刺1-1.5寸。","t":"任脉、手太阳经、足阳明经交会穴"},{"c":"RN14","n":"巨阙","p":"Jùquè","m":"RN","l":"在上腹部，前正中线上，当脐中上6寸","f":"①心悸，心烦，心痛，胸痛。②癫狂痫。","k":"直刺0.3-0.6寸。","t":"心之募穴"},{"c":"RN15","n":"鸠尾","p":"Jiūwěi","m":"RN","l":"在上腹部，前正中线上，当剑胸结合下1寸","f":"①胸痛，气喘。②腹胀。③癫狂痫。","k":"直刺0.3-0.6寸。","t":"络穴，膏之原"},{"c":"RN16","n":"中庭","p":"Zhōngtíng","m":"RN","l":"在胸部，剑胸结合中点处，前正中线上。","f":"①胸胁胀满。②呕吐，噎膈。","k":"斜刺0.3-0.6寸。","t":""},{"c":"RN17","n":"膻中","p":"Dànzhōng","m":"RN","l":"在胸部，横平第4肋间隙，前正中线上。","f":"①胸闷，咳嗽，气喘，心痛。②乳痈，乳少。③噎膈，呕吐。","k":"平刺0.3-0.5寸。","t":"心包募穴，八会穴（气会），任脉、足太阴经、足少阴经、手太阳经、手少阳经交会穴"},{"c":"RN18","n":"玉堂","p":"Yùtáng","m":"RN","l":"在胸部，横平第3肋间隙，前正中线上。","f":"①咳嗽，气喘，胸闷，胸痛。②乳痈。③呕吐。","k":"平刺0.3-0.5寸。","t":""},{"c":"RN19","n":"紫宫","p":"Zǐgōng","m":"RN","l":"在胸部，横平第2肋间隙，前正中线上。","f":"①胸痛，胸闷。②咳嗽，气喘。","k":"平刺0.3-0.5寸。","t":""},{"c":"RN20","n":"华盖","p":"Huágài","m":"RN","l":"在胸部，横平第1肋间隙，前正中线上。","f":"胸痛，咳嗽，气喘。","k":"平刺0.3-0.5寸。","t":""},{"c":"RN21","n":"璇玑","p":"Xuánjī","m":"RN","l":"在胸部，胸骨上窝下1寸，前正中线上。","f":"①胸痛，咳嗽，气喘。②咽喉肿痛。","k":"平刺0.3-0.5寸。","t":""},{"c":"RN22","n":"天突","p":"Tiāntū","m":"RN","l":"在颈前区，胸骨上窝中央，前正中线上。","f":"①咳嗽，气喘，胸痛。②咽喉肿痛，暴喑，瘿气。③噎膈。","k":"先直刺0.2寸，当针尖超过胸骨柄内缘后，即向下沿胸骨柄后缘、气管前缘缓慢向下刺入0.5-1寸。","t":""},{"c":"RN23","n":"廉泉","p":"Liánquán","m":"RN","l":"在颈前区，喉结上方，舌骨上缘凹陷中，前正中线上。","f":"舌强不语，舌下肿痛，吞咽困难，咽喉肿痛，流涎。","k":"针尖向舌根斜刺0.5-0.8寸。","t":"任脉、阴维脉交会穴"},{"c":"RN24","n":"承浆","p":"Chéngjiāng","m":"RN","l":"在面部，颏唇沟的正中凹陷处。","f":"①口眼㖞斜，口噤，齿痛，暴喑。②癫狂痫。","k":"斜刺0.3-0.5寸。","t":"任脉、足阳明经交会穴"},{"c":"LU1","n":"中府","p":"Zhōngfǔ","m":"LU","l":"在胸部，横平第1肋间隙，锁骨下窝外侧，前正中线旁开6寸。注：在云门下1寸。","f":"①咳嗽，气喘。②胸痛，胸满。③肩背痛。","k":"向外斜刺或平刺0.5-0.8寸。不可向内深刺，以免伤及脏器。","t":"肺之募穴，手太阴经、足太阴经交会穴"},{"c":"LU2","n":"云门","p":"Yúnmén","m":"LU","l":"在胸部，锁骨下窝凹陷中，肩胛骨喙突内缘，前正中线旁开6寸。","f":"①咳嗽，气喘。②心痛，胸满。③肩背痛。","k":"向外斜刺0.5-0.8寸。不可向内深刺，以免伤及脏器。","t":""},{"c":"LU3","n":"天府","p":"Tiānfǔ","m":"LU","l":"在臂前区，腋前纹头下3寸，肱二头肌桡侧缘处。","f":"①鼻衄，咳嗽，气喘。②瘿气。③臂痛。","k":"直刺0.5-1寸。","t":""},{"c":"LU4","n":"侠白","p":"Xiábái","m":"LU","l":"在臂前区，腋前纹头下4寸，肱二头肌桡侧缘处。","f":"①咳嗽，气喘，心痛。②干呕。③臂痛。","k":"直刺0.5-1寸。","t":""},{"c":"LU5","n":"尺泽","p":"Chǐzé","m":"LU","l":"在肘区，肘横纹上，肱二头肌腱桡侧缘凹陷中。","f":"①咳嗽，气喘，咳血，潮热，胸部胀满，咽喉肿痛。②急性吐泻，中暑，小儿惊风。③，肘臂挛痛。","k":"直刺0.8-1.2寸，或点刺出血。","t":"合穴"},{"c":"LU6","n":"孔最","p":"Kǒngzuì","m":"LU","l":"在前臂前区，腕掌侧远端横纹上7寸，尺泽与太渊连线上。","f":"①咳嗽，气喘，咯血，鼻衄，咽喉肿痛。②热病无汗。③，肘臂挛痛。","k":"直刺0.5-1寸。","t":"郄穴"},{"c":"LU7","n":"列缺","p":"Lièquē","m":"LU","l":"在前臂，腕掌侧远端横纹上1.5寸，拇短伸肌腱与拇长展肌腱之间，拇长展肌腱沟的凹陷中。","f":"①咳嗽，气喘。②咽喉肿痛，口眼斜，齿痛。③头痛，颈项强痛。","k":"向上斜刺0.5-0.8寸。","t":"络穴，八脉交会穴（通任脉）"},{"c":"LU8","n":"经渠","p":"Jīngqú","m":"LU","l":"在前臂前区，腕掌侧远端横纹上1寸，桡骨茎突与桡动脉之间。","f":"①咳嗽，气喘，胸痛，咽喉肿痛。②手腕痛。","k":"避开桡动脉，直刺0.3-0.5寸。","t":"经穴"},{"c":"LU9","n":"太渊","p":"Tàiyuān","m":"LU","l":"在腕前区，桡骨茎突与舟状骨之间，拇长展肌腱尺侧凹陷中。注:在腕掌侧远端横纹桡侧，桡动脉搏动处。","f":"①咳嗽，气喘，咯血，咽喉肿痛。②无脉症。③，手腕痛。","k":"避开桡动脉，直刺0.3-0.5寸。","t":"输穴，原穴，八会穴（脉会）"},{"c":"LU10","n":"鱼际","p":"Yújì","m":"LU","l":"在手外侧，第1掌骨桡侧中点赤白肉际处。","f":"①咳嗽，咯血，咽干，咽喉肿痛。②身热，掌中热。③小儿疳积。","k":"直刺0.5-0.8寸。","t":"荥穴"},{"c":"LU11","n":"少商","p":"Shàoshāng","m":"LU","l":"在手指，拇指末节桡侧，指甲根角侧上方0.1寸（指寸）。","f":"①咽喉肿痛，发热，咳嗽，鼻衄。②昏迷，癫狂。③，手指挛痛。","k":"浅刺0.1寸，或点刺出血。","t":"井穴"},{"c":"LI1","n":"商阳","p":"Shāngyáng","m":"LI","l":"在手指，食指末节桡侧，指甲根角侧上方0.1寸（指寸）。","f":"①咽喉肿痛，齿痛，耳鸣，耳聋。②热病，昏迷。③，手指麻木、肿痛。","k":"浅刺0.1寸，或点刺出血。","t":"井穴"},{"c":"LI2","n":"二间","p":"Èrjiān","m":"LI","l":"在手指，第2掌指关节桡侧远端赤白肉际处。","f":"①咽喉肿痛，齿痛，目痛，鼻衄，口眼㖞斜。②热病。","k":"直刺0.2-0.3寸。","t":"荥穴"},{"c":"LI3","n":"三间","p":"Sānjiān","m":"LI","l":"在手背，第2掌指关节桡侧近端凹陷中。","f":"①目痛，齿痛，咽喉肿痛。②胸满，身热。③，手背、手指肿痛。④肠鸣。","k":"直刺0.3-0.5寸。","t":"输穴"},{"c":"LI4","n":"合谷","p":"Hégǔ","m":"LI","l":"在手背，第二掌骨桡侧的中点处。","f":"①头痛，齿痛，目赤肿痛，咽喉肿痛，鼻衄，耳聋，牙关紧闭，口眼㖞斜。②热病，无汗，多汗。③，滞产，经闭。④腹痛，便秘。⑤上肢痿痹。","k":"直刺0.5-1寸。孕妇慎用。","t":"原穴"},{"c":"LI5","n":"阳溪","p":"Yángxī","m":"LI","l":"在腕区，腕背侧远端横纹桡侧，桡骨茎突远端，手拇指充分外展和后伸时，拇长伸肌腱与拇短伸肌腱之间的凹陷中。","f":"①头痛，目赤肿痛，齿痛，咽喉肿痛。②手腕痛。","k":"直刺0.5-0.8寸。","t":"经穴"},{"c":"LI6","n":"偏历","p":"Piānlì","m":"LI","l":"在前臂，腕背侧远端横纹上3寸，阳溪与曲池连线上。","f":"①齿痛，耳鸣，耳聋，鼻衄，咽喉肿痛。②水肿，小便不利。③，手臂酸痛。","k":"直刺或斜刺0.5-0.8寸。","t":"络穴"},{"c":"LI7","n":"温溜","p":"Wēnliū","m":"LI","l":"在前臂，腕背侧远端横纹上5寸，阳溪与曲池连线上。","f":"①头痛，面肿，咽喉肿痛。②肠鸣，腹痛。③，肩背酸痛，疔疮。④热病。","k":"直刺0.5-1寸。","t":"郄穴"},{"c":"LI8","n":"下廉","p":"Xiàlián","m":"LI","l":"在前臂，肘横纹下4寸，阳溪与曲池连线上。","f":"①头痛，眩晕，目痛。②腹胀，腹痛。③，肘臂痛。","k":"直刺0.5-1寸。","t":""},{"c":"LI9","n":"上廉","p":"Shànglián","m":"LI","l":"在前臂，肘横纹下3寸，阳溪与曲池连线上。","f":"①肩臂酸痛，手臂麻木。②头痛。③肠鸣，腹痛。","k":"直刺0.5-1寸。","t":""},{"c":"LI10","n":"手三里","p":"Shǒusānlǐ","m":"LI","l":"在前臂，肘横纹下2寸，阳溪与曲池连线上。","f":"①手臂麻痛，上肢不遂。②肩背痛，腰痛。③，齿痛，颊肿。","k":"直刺0.8-1.2寸。","t":""},{"c":"LI11","n":"曲池","p":"Qūchí","m":"LI","l":"在肘区，尺泽与肱骨外上髁连线的中点处。注：极度屈肘时，肘横纹桡侧端凹陷中。","f":"①咽喉肿痛，齿痛，目赤痛，头痛。②上肢不遂，手臂肿痛。③，瘾疹，湿疹，瘰疬。④，腹痛，吐泻。⑤热病。","k":"直刺1-1.5寸。","t":"合穴"},{"c":"LI12","n":"肘髎","p":"Zhǒuliáo","m":"LI","l":"在肘区，肱骨外上髁上缘，髁上嵴的前缘。","f":"肘臂酸痛、麻木、挛急。","k":"直刺0.5-1寸。","t":""},{"c":"LI13","n":"手五里","p":"Shǒuwǔlǐ","m":"LI","l":"在臂部，肘横纹上3寸，曲池与肩髃连线上。","f":"肘臂挛痛，瘰疬。","k":"避开动脉，直刺0.5-1寸。","t":""},{"c":"LI14","n":"臂臑","p":"Bìnào","m":"LI","l":"在臂部，曲池上7寸，三角肌前缘处。","f":"①肩臂痛，瘰疬。②目疾。","k":"直刺或向上斜刺0.8-1.5寸。","t":""},{"c":"LI15","n":"肩髃","p":"Jiānyú","m":"LI","l":"在三角肌区，肩峰外侧缘前端与肱骨大结节两骨间凹陷中。注：屈臂外展时，肩峰外侧缘前后端呈现两个凹陷，前一较深凹陷即本穴，后一凹陷为肩髎。","f":"①上肢不遂，肩臂疼痛，瘰疬。②瘾疹。","k":"直刺或向下斜刺0.8-1.5寸。","t":"手阳明经、阳跷脉交会穴"},{"c":"LI16","n":"巨骨","p":"Jùgǔ","m":"LI","l":"在肩胛区，锁骨肩峰端与肩胛冈之间凹陷中。","f":"肩臂挛痛，瘰疬，瘿气。","k":"直刺，微斜向外下方，进针0.5-1寸。","t":"手阳明经、阳跷脉交会穴"},{"c":"LI17","n":"天鼎","p":"Tiāndǐng","m":"LI","l":"在颈部，横平环状软骨，胸锁乳突肌后缘。","f":"①咽喉肿痛，暴瘖，呃逆。②瘰疬，瘿气。","k":"直刺0.5-0.8寸。","t":""},{"c":"LI18","n":"扶突","p":"Fútū","m":"LI","l":"在胸锁乳突肌区，横平喉结，胸锁乳突肌前、后缘中间。","f":"①瘿气，暴瘖，咽喉肿痛。②咳嗽，气喘。","k":"直刺0.5-0.8寸。","t":""},{"c":"LI19","n":"口禾髎","p":"Kǒuhéliáo","m":"LI","l":"在面部，横平人中沟上1/3与下2/3交点，鼻孔外缘直下。","f":"①鼻塞，鼽衄。②口眼㖞斜，口噤。","k":"平刺或斜刺0.3-1寸。","t":""},{"c":"LI20","n":"迎香","p":"Yíngxiāng","m":"LI","l":"在面部，鼻翼外缘中点旁，鼻唇沟中。","f":"鼻塞，鼽衄，口眼㖞斜，面痒，面肿。","k":"斜刺或平刺0.3-0.5寸。","t":"手阳明经、足阳明经交会穴"},{"c":"ST1","n":"承泣","p":"Chéngqì","m":"ST","l":"在面部，眼球与眶下缘之间，瞳孔直下。","f":"①目赤肿痛，迎风流泪，夜盲，近视，眼睑瞤动。②口眼斜。","k":"嘱患者闭目，医者押手轻轻固定眼球，刺手持针，于眶下缘和眼球之间缓慢直刺，0.5〜1寸，不宜提插捻转，以防刺破血管引起血肿；出针时按压针孔片刻。禁灸。","t":"足阳明经、阳跷脉、任脉交会穴"},{"c":"ST2","n":"四白","p":"Sìbái","m":"ST","l":"在面部，眶下孔处。","f":"①目赤肿痈，目翳，迎风流泪，眼睑瞤动。②面痛，面肌痉挛。③头痛，眩晕。","k":"直剌0.3〜0.5寸；或沿皮透刺睛明；或向外上方斜刺0.5寸入眶下孔。","t":""},{"c":"ST3","n":"巨髎","p":"Jùliáo","m":"ST","l":"在面部，横平鼻翼下缘，瞳孔直下。","f":"①口眼㖞斜，面痛，齿痛，唇颊肿。②眼睑瞤动，青盲，目视不明。","k":"直刺0.5〜0.8寸。","t":"足阳明经、阳跷脉交会穴"},{"c":"ST4","n":"地仓","p":"Dìcāng","m":"ST","l":"在面部，口角旁开0.4寸(指寸)。","f":"口眼㖞斜，流涎。","k":"斜刺或平刺0.5-0.8寸，可向迎香、颊车方向透刺1-2寸。","t":"足阳明经、阳跷脉交会穴"},{"c":"ST5","n":"大迎","p":"Dàyíng","m":"ST","l":"在面部，下颌角前方，咬肌附着部的前缘凹陷中，面动脉搏动处。","f":"口眼㖞斜，面肌痉挛，口噤，颊肿，齿痛。","k":"避开动脉直刺0.3〜0.5寸，或斜向地仓方向刺。","t":""},{"c":"ST6","n":"颊车","p":"Jiáchē","m":"ST","l":"在面部，下颌角前上方一横指(中指)，当咀嚼时，咬肌隆起处。","f":"口眼㖞斜，口噤，颊肿，齿痛。","k":"直刺0.3〜0.5寸，或向地仓方向透刺1.5-2寸。","t":""},{"c":"ST7","n":"下关","p":"Xiàguān","m":"ST","l":"在面部，颧弓下缘中央与下颌切迹之间凹陷中。","f":"①耳聋，耳鸣。②齿痛，颊肿，口眼斜，面痛。","k":"直刺或斜刺0.5-1寸。","t":"足阳明经、足少阳经交会穴"},{"c":"ST8","n":"头维","p":"Tóuwéi","m":"ST","l":"在头部，额角发际直上0.5寸，头正中线旁开4.5寸。","f":"①头痛，眩晕。②目痛，迎风流泪，目视不明，眼睑瞤动。","k":"向后平剌0.5〜0.8寸或横刺透率谷。","t":"足阳明经、足少阳经、阳维脉交会穴"},{"c":"ST9","n":"人迎","p":"Rényíng","m":"ST","l":"在颈部，横平喉结，胸锁乳突肌前缘，颈总动脉搏动处。","f":"①咽喉肿痛，瘰疬，瘿气。②头痛，眩晕。③气喘。","k":"避开动脉直刺0.3〜0.8寸。慎灸。","t":"足阳明经、足少阳经交会穴"},{"c":"ST10","n":"水突","p":"Shuǐtū","m":"ST","l":"在颈部，横平环状软骨，胸锁乳突肌前缘。","f":"①咳嗽，气喘。②咽喉肿痛，瘿气，瘰疬。","k":"直刺0.3-0.5寸。","t":""},{"c":"ST11","n":"气舍","p":"Qìshè","m":"ST","l":"在胸锁乳突肌区，锁骨上小窝，锁骨胸骨端上缘，胸锁乳突肌胸骨头与锁骨头中间的凹陷中。","f":"①咳嗽，气喘。②咽喉肿痛，瘿气，瘰疬，颈项强痛。","k":"直刺0.3-0.5寸。","t":""},{"c":"ST12","n":"缺盆","p":"Quēpén","m":"ST","l":"在颈外侧区，锁骨上大窝，锁骨上缘凹陷中，前正中线旁开4寸。","f":"①咳嗽，气喘。②缺盆中痛，咽喉肿痛，瘰疬。","k":"直剌或向后背横刺0.3〜0.5寸，不可深刺以防刺伤胸膜引起气胸。","t":""},{"c":"ST13","n":"气户","p":"Qìhù","m":"ST","l":"在胸部，锁骨下缘，前正中线旁开4寸。","f":"①咳嗽，气喘。②胸痛，胸胁胀满。","k":"斜刺或平刺0.5-0.8寸。","t":""},{"c":"ST14","n":"库房","p":"Kùfáng","m":"ST","l":"在胸部，第1肋间隙，前正中线旁开4寸。","f":"①咳嗽，气喘，咳唾脓血。②胸胁胀痛。","k":"斜刺或平刺0.5-0.8寸。","t":""},{"c":"ST15","n":"屋翳","p":"Wūyì","m":"ST","l":"在胸部，第2肋间隙，前正中线旁开4寸。","f":"①咳嗽，气喘。②胸胁胀满，乳痈。","k":"斜刺或平刺0.5-0.8寸。","t":""},{"c":"ST16","n":"膺窗","p":"Yīngchuāng","m":"ST","l":"在胸部，第3肋间隙，前正中线旁开4寸。","f":"气喘，胸满，乳痈。","k":"斜刺或平刺0.5-0.8寸。","t":""},{"c":"ST17","n":"乳中","p":"Rǔzhōng","m":"ST","l":"在胸部，乳头中央。","f":"本穴只作胸腹部腧穴的定位标志。","k":"不针不灸。","t":""},{"c":"ST18","n":"乳根","p":"Rǔgēn","m":"ST","l":"在胸部，第5肋间隙，前正中线旁开4寸。注：女性在乳房根部弧线中点处。","f":"①咳嗽，气喘，胸满，胸痛。②乳痈，乳癖，乳汁少。","k":"斜刺或平刺0.5-0.8寸。","t":""},{"c":"ST19","n":"不容","p":"Bùróng","m":"ST","l":"在上腹部，脐中上6寸，前正中线旁开2寸。注2:对于某些肋弓角较狭小的人，此穴下可能正当肋骨，可采用斜刺的方法。","f":"①腹满，呕吐，食欲不振。②胃痛，腹痛引背。","k":"直刺0.5-1寸。","t":""},{"c":"ST20","n":"承满","p":"Chéngmǎn","m":"ST","l":"在上腹部，脐中上5寸，前正中线旁开2寸。","f":"胃痛，腹痛，腹胀，肠鸣，吐血，噎嗝。","k":"直刺0.5-1寸。","t":""},{"c":"ST21","n":"梁门","p":"Liángmén","m":"ST","l":"在上腹部，脐中上4寸，前正中线旁开2寸。","f":"胃痛，呕吐，食欲不振，腹胀，泄泻。","k":"直刺0.5-1寸。","t":""},{"c":"ST22","n":"关门","p":"Guānmén","m":"ST","l":"在上腹部，脐中上3寸，前正中线旁开2寸。","f":"①腹痛，腹胀，肠鸣，泄泻。②水肿，遗尿。","k":"直刺0.5-1寸。","t":""},{"c":"ST23","n":"太乙","p":"Tàiyǐ","m":"ST","l":"在上腹部，脐中上2寸，前正中线旁开2寸。","f":"①腹痛，腹胀，呕吐。②癫痫。","k":"直刺0.8-1.2寸。","t":""},{"c":"ST24","n":"滑肉门","p":"Huáròumén","m":"ST","l":"在上腹部，脐中上1寸，前正中线旁开2寸。","f":"①腹痛，腹胀，呕吐。②癫痫。","k":"直刺0.8-1.2寸。","t":""},{"c":"ST25","n":"天枢","p":"Tiānshū","m":"ST","l":"在腹部，横平脐中，前正中线旁开2寸。","f":"①腹胀，肠鸣，腹痛，便秘，泄泻，痢疾。②月经不调，痛经。","k":"直刺1-1.5寸。","t":"大肠募穴"},{"c":"ST26","n":"外陵","p":"Wàilíng","m":"ST","l":"在下腹部，脐中下1寸，前正中线旁开2寸。","f":"腹痛，腹胀","k":"直刺1-1.5寸。","t":""},{"c":"ST27","n":"大巨","p":"Dàjù","m":"ST","l":"在下腹部，脐中下2寸，前正中线旁开2寸。","f":"①腹痛，腹胀。②小便不利，疝气，遗精，早泄。","k":"直刺1-1.5寸。","t":""},{"c":"ST28","n":"水道","p":"Shuǐdào","m":"ST","l":"在下腹部，脐中下3寸，前正中线旁开2寸。","f":"①水肿，小便不利，小腹胀满。②痛经，不孕，疝气。","k":"直刺1-1.5寸。","t":""},{"c":"ST29","n":"归来","p":"Guīlái","m":"ST","l":"在下腹部，脐中下4寸，前正中线旁开2寸。","f":"①腹痛，疝气。②闭经，月经不调，阴挺，带下。","k":"直刺1-1.5寸。","t":""},{"c":"ST30","n":"气冲","p":"Qìchōng","m":"ST","l":"在腹股沟区，耻骨联合上缘，前正中线旁开2寸，动脉搏动处。","f":"疝气，月经不调，不孕","k":"直刺0.5-1寸，不宜灸。","t":"足阳明、冲脉交会穴"},{"c":"ST31","n":"髀关","p":"Bìguān","m":"ST","l":"在股前区，股直肌近端、缝匠肌与阔筋膜张肌3条肌肉之间凹陷中。","f":"①下肢痿痹，腰膝冷痛。②腹痛。","k":"直刺1-2寸。","t":""},{"c":"ST32","n":"伏兔","p":"Fútù","m":"ST","l":"在股前区，髌底上6寸，髂前上棘与髌底外侧端的连线上。","f":"腰痛膝冷，下肢痿痹，脚气。","k":"直刺1-2寸。","t":""},{"c":"ST33","n":"阴市","p":"Yīnshì","m":"ST","l":"在股前区，髌底上3寸，股直肌肌腱外侧缘。","f":"寒疝痛引膝，下肢痿痹，屈伸不利。","k":"直刺1-1.5寸。","t":""},{"c":"ST34","n":"梁丘","p":"Liángqiū","m":"ST","l":"在股前区，髌底上2寸，股外侧肌与股直肌肌腱之间。","f":"①胃痛。②乳痈。③膝肿痛，下肢不遂。","k":"直刺1-1.5寸。","t":"郄穴"},{"c":"ST35","n":"犊鼻","p":"Dúbí","m":"ST","l":"在膝前区，髌韧带外侧凹陷中。","f":"膝痛，屈伸不利，脚气。","k":"向后内斜刺0.5-1寸。","t":""},{"c":"ST36","n":"足三里","p":"Zúsānlǐ","m":"ST","l":"在小腿外侧，犊鼻下3寸，犊鼻与解溪连线上。","f":"①胃痛，呕吐，呃逆，腹胀，腹痛，肠鸣，泄泻，便秘，痢疾。②乳痈。③虚劳羸瘦，咳嗽气喘，心悸气短，头晕。④失眠，癫狂。⑤膝痛，下肢痿痹，脚气，水肿。","k":"直刺1-2寸。","t":"合穴，胃之下合穴"},{"c":"ST37","n":"上巨虚","p":"Shàngjùxū","m":"ST","l":"在小腿外侧，犊鼻下6寸，犊鼻与解溪连线上。","f":"①腹痛，肠痈，肠鸣，泄泻，便秘。②下肢痿痹，脚气。","k":"直刺1-1.5寸。","t":"大肠下合穴"},{"c":"ST38","n":"条口","p":"Tiáokǒu","m":"ST","l":"在小腿外侧，犊鼻下8寸，犊鼻与解溪连线上。","f":"①下肢痿痹，转筋。②肩臂痛。","k":"直刺1-1.5寸。","t":""},{"c":"ST39","n":"下巨虚","p":"Xiàjùxū","m":"ST","l":"在小腿外侧，犊鼻下9寸，犊鼻与解溪连线上。","f":"①小腹痛，腰脊痛引睾丸。②泄泻，痢疾。③乳痈。④下肢痿痹。","k":"直刺1-1.5寸。","t":"小肠下合穴"},{"c":"ST40","n":"丰隆","p":"Fēnglóng","m":"ST","l":"在小腿外侧，外踝尖上8寸，胫骨前肌的外缘。注：条口外侧一横指处。","f":"①咳嗽，痰多，哮喘。②头痛，眩晕，癫狂痫。③下肢痿痹。④腹痛，腹胀，便秘。","k":"直刺1-1.5寸。","t":"络穴"},{"c":"ST41","n":"解溪","p":"Jiěxī","m":"ST","l":"在踝区，踝关节前面中央凹陷中，当拇长伸肌腱与趾长伸肌腱之间。","f":"①头痛，眩晕，癫狂。②腹胀，便秘。③下肢痿痹，足踝肿痛。","k":"直刺0.5-1寸。","t":"经穴"},{"c":"ST42","n":"冲阳","p":"Chōngyáng","m":"ST","l":"在足背，第2跖骨基底部与中间楔状骨关节处，可触及足背动脉。","f":"①胃痛，腹胀。②口眼斜，面肿，齿痛。③足背肿痛，足痿无力。④癫狂。","k":"避开动脉，直刺0.3-0.5寸。","t":"原穴"},{"c":"ST43","n":"陷谷","p":"Xiàngǔ","m":"ST","l":"在足背，第2、3跖骨间，第2跖趾关节近端凹陷中。","f":"①面肿，水肿。②足背肿痛。③腹痛，肠鸣。","k":"直刺0.3-0.5寸。","t":"输穴"},{"c":"ST44","n":"内庭","p":"Nèitíng","m":"ST","l":"在足背，第2、3趾间，趾蹼缘后方赤白肉际处。","f":"①齿痛，咽喉肿痛，口眼斜，鼻衄。②热病。③腹痛，腹胀，食欲不振，便秘，泄泻，痢疾。④足背肿痛。","k":"直刺或向上斜刺0.5-1寸。","t":"荥穴"},{"c":"ST45","n":"厉兑","p":"Lìduì","m":"ST","l":"在足趾，第2趾末节外侧，趾甲根角侧后方0.1寸（指寸）。","f":"①齿痛，面肿，口眼斜，咽喉肿痛，鼻衄。②癲狂，热病，多梦，善惊，神昏。③足背肿痛。","k":"浅刺0.1寸，或用三棱针点刺出血。","t":"井穴"},{"c":"SP1","n":"隐白","p":"Yǐnbái","m":"SP","l":"在足趾，大趾末节内侧，趾甲根角侧后方0.1寸（指寸）","f":"①月经过多，崩漏，尿血，便血。②腹胀，泄泻，呕吐。③癫狂，梦魇，多梦，惊风。","k":"浅刺0.1寸。","t":"井穴"},{"c":"SP2","n":"大都","p":"Dàdū","m":"SP","l":"在足趾，第1跖趾关节远端赤白肉际凹陷中。","f":"①腹胀，胃痛，呕吐，泄泻，便秘。②热病。","k":"直刺0.3-0.5寸。","t":"荥穴"},{"c":"SP3","n":"太白","p":"Tàibái","m":"SP","l":"在跖区，第1跖趾关节近端赤白肉际凹陷中。","f":"①胃痛，腹胀，腹痛，肠鸣，泄泻，痢疾，便秘。②体重节痛。","k":"直刺0.5-1寸。","t":"输穴，原穴"},{"c":"SP4","n":"公孙","p":"Gōngsūn","m":"SP","l":"在跖区，第1跖骨底的前下缘赤白肉际处。","f":"①胃痛，呕吐，腹胀，腹痛，泄泻，痢疾。②心痛，心烦，胸闷。","k":"直刺0.5-1寸。","t":"络穴，八脉交会穴（通冲脉）"},{"c":"SP5","n":"商丘","p":"Shāngqiū","m":"SP","l":"在踝区，内踝前下方，舟骨粗隆与内踝尖连线中点凹陷中。","f":"①腹胀，泄泻，便秘，痔疾。②足踝肿痛，疝气痛引膝股。","k":"直刺0.3-0.5寸。","t":"经穴"},{"c":"SP6","n":"三阴交","p":"Sānyīnjiāo","m":"SP","l":"在小腿内侧，内踝尖上3寸，胫骨内侧缘后际。","f":"①月经不调，崩漏，带下，阴挺，滞产，不孕，遗精，阳痿，疝气，小便不利，遗尿，水肿。②肠鸣，腹胀，泄泻，便秘。③失眠，眩晕。④下肢痿痹。","k":"直刺1-1.5寸，孕妇慎用。","t":"足太阴经、足少阴经、足厥阴经交会穴"},{"c":"SP7","n":"漏谷","p":"Lòugǔ","m":"SP","l":"在小腿内侧，内踝尖上6寸，胫骨内侧缘后际。","f":"①腹胀，肠鸣。②小便不利，遗精，疝气。③下肢痿痹。","k":"直刺1-1.5寸。","t":""},{"c":"SP8","n":"地机","p":"Dìjī","m":"SP","l":"在小腿内侧，阴陵泉下3寸，胫骨内侧缘后际。","f":"①腹痛，泄泻。②月经不调，痛经，遗精，疝气。","k":"直刺1-1.5寸。","t":"郄穴"},{"c":"SP9","n":"阴陵泉","p":"Yīnlíngquán","m":"SP","l":"在小腿内侧，胫骨内侧髁下缘与胫骨内侧缘之间的凹陷中。","f":"①腹痛，腹胀，泄泻。②小便不利，遗尿，遗精，痛经，妇人阴痛，带下。③水肿，膝痛。","k":"直刺1-2寸。","t":"合穴"},{"c":"SP10","n":"血海","p":"Xuèhǎi","m":"SP","l":"在股前区，髌底内侧端上2寸，股内侧肌隆起处。","f":"①月经不调，经闭，崩漏。②湿疹，瘾疹。","k":"直刺1-1.5寸。","t":""},{"c":"SP11","n":"箕门","p":"Jīmén","m":"SP","l":"在股前区，髌底内侧端与冲门的连线上1/3与下2/3交点，长收肌和缝匠肌交角的动脉搏动处。","f":"①小便不利，遗尿。②腹股沟肿痛。","k":"避开动脉，直刺0.5-1寸。","t":""},{"c":"SP12","n":"冲门","p":"Chōngmén","m":"SP","l":"在腹股沟区，腹股沟斜纹中，髂外动脉搏动处的外侧，横平耻骨联合上缘。","f":"①腹痛。②癃闭，疝气。","k":"避开动脉，直刺0.5-1寸。","t":"足太阴经、足厥阴经、阴维脉交会穴"},{"c":"SP13","n":"府舍","p":"Fǔshè","m":"SP","l":"在下腹部，脐中下4.3寸，前正中线旁开4寸。","f":"①腹痛，积聚，呕吐，泄泻。②疝气。","k":"直刺1-1.5寸。","t":"足太阴经、足厥阴经、阴维脉交会穴"},{"c":"SP14","n":"腹结","p":"Fùjié","m":"SP","l":"在下腹部，脐中下1.3寸，前正中线旁开4寸。","f":"①腹痛，便秘，泄泻。②疝气。","k":"直刺1-1.5寸。","t":""},{"c":"SP15","n":"大横","p":"Dàhéng","m":"SP","l":"在腹部，脐中旁开4寸。","f":"腹痛，泄泻，便秘。","k":"直刺1-1.5寸。","t":"足太阴经、阴维脉交会穴"},{"c":"SP16","n":"腹哀","p":"Fùāi","m":"SP","l":"在上腹部，脐中上3寸，前正中线旁开4寸。","f":"消化不良，腹痛，便秘，痢疾。","k":"直刺1-1.5寸。","t":"足太阴经、阴维脉交会穴"},{"c":"SP17","n":"食窦","p":"Shídòu","m":"SP","l":"在胸部，第5肋间隙，前正中线旁开6寸。","f":"胸满，胁痛。","k":"斜刺或平刺0.5-0.8寸。","t":""},{"c":"SP18","n":"天溪","p":"Tiānxī","m":"SP","l":"在胸部，第4肋间隙，前正中线旁开6寸。","f":"①胸痛，咳嗽，气喘。②乳痈，乳汁少。","k":"斜刺或平刺0.5-0.8寸。","t":""},{"c":"SP19","n":"胸乡","p":"Xiōngxiāng","m":"SP","l":"在胸部，第3肋间隙，前正中线旁开6寸。","f":"胸胁胀痛。","k":"斜刺或平刺0.5-0.8寸。","t":""},{"c":"SP20","n":"周荣","p":"Zhōuróng","m":"SP","l":"在胸部，第2肋间隙，前正中线旁开6寸。","f":"咳嗽，气喘，胸胁胀满。","k":"斜刺或平刺0.5-0.8寸。","t":""}];
+
+// ===== CIRCULATION DATA =====
+const CIRCS = [
+  {id:'LU',name:'手太阴肺经',color:'#f4e842',desc:'起于中焦，下络大肠，还循胃口，上膈属肺。从肺系横出腋下，下循臑内。共11穴，左右22穴。'},
+  {id:'LI',name:'手阳明大肠经',color:'#77f442',desc:'起于食指末端，沿食指桡侧上行，经合谷，至肘外侧，经上臂外侧至肩峰前缘。共20穴，左右40穴。'},
+  {id:'ST',name:'足阳明胃经',color:'#4488ff',desc:'起于鼻翼旁，挟鼻上行，沿鼻外侧下行入上齿中，环绕口唇，沿下颌角上行。共45穴，左右90穴。'},
+  {id:'SP',name:'足太阴脾经',color:'#ffa500',desc:'起于足大趾末端，沿大趾内侧赤白肉际上行，经内踝前缘，沿胫骨后缘上行。共21穴，左右42穴。'},
+  {id:'HT',name:'手少阴心经',color:'#ff4444',desc:'起于心中，出属心系，下膈络小肠。其直者从心系上肺，下出腋下，下循臑内后廉。共9穴，左右18穴。'},
+  {id:'SI',name:'手太阳小肠经',color:'#ff8844',desc:'起于小指外侧端，沿手背外侧至腕部，出于尺骨茎突，沿前臂后边直上。共19穴，左右38穴。'},
+  {id:'BL',name:'足太阳膀胱经',color:'#44aaff',desc:'起于目内眦，上额交会于巅顶。从头顶入络脑，还出别下项，循肩膊内挟脊抵腰中。共67穴，左右134穴。'},
+  {id:'KI',name:'足少阴肾经',color:'#9944ff',desc:'起于足小趾之下，斜走足心，出于然谷之下，循内踝之后，贯脊属肾络膀胱。共27穴，左右54穴。'},
+  {id:'PC',name:'手厥阴心包经',color:'#ff44aa',desc:'起于胸中，出属心包络，下膈历络三焦。循胸出胁，下腋三寸，循臑内。共9穴，左右18穴。'},
+  {id:'TE',name:'手少阳三焦经',color:'#44ff88',desc:'起于无名指末端，上出两指之间，循手表腕出臂外，上贯肘，循臑外上肩。共23穴，左右46穴。'},
+  {id:'GB',name:'足少阳胆经',color:'#88ff44',desc:'起于目外眦，上抵头角，下耳后循颈行至肩上，入缺盆。共44穴，左右88穴。'},
+  {id:'LR',name:'足厥阴肝经',color:'#44ffcc',desc:'起于大趾丛毛之际，上循足跗上廉，去内踝一寸，上踝八寸，挟胃属肝络胆。共14穴，左右28穴。'},
+  {id:'DU',name:'督脉',color:'#ff6666',desc:'起于小腹内，下出于会阴部，向后行于脊柱内部，上达项后风府，进入脑内，上行巅顶。共29穴。'},
+  {id:'RN',name:'任脉',color:'#a742f4',desc:'起于小腹内，下出于会阴部，向前上行于阴毛部，沿腹部正中线上行。共24穴。'},
+  {id:'chongmai',name:'冲脉',color:'#ffcc44',desc:'起于胞中，下出会阴，分三支上行。有"十二经脉之海"之称。'},
+  {id:'daimai',name:'带脉',color:'#ff8888',desc:'起于季胁部，绕身一周如束带状，统束诸经。'},
+  {id:'yangqiaomai',name:'阳跷脉',color:'#88ccff',desc:'起于足跟外侧申脉穴，沿外踝后上行，经股外侧至目内眦。'},
+  {id:'yinqiaomai',name:'阴跷脉',color:'#cc88ff',desc:'起于足跟内侧照海穴，沿内踝后上行至目内眦。'},
+  {id:'yangweimai',name:'阳维脉',color:'#88ffcc',desc:'起于足跟外侧金门穴，联络各阳经，主一身之表。'},
+  {id:'yinweimai',name:'阴维脉',color:'#ffaa88',desc:'起于小腿内侧筑宾穴，联络各阴经，主一身之里。'}
+];
+
+// ===== ZIWU LIUZHU DATA =====
+const ZIWU = [
+  {start:3,end:5,code:'LU',name:'肺经',organ:'肺',dizhi:'寅时'},
+  {start:5,end:7,code:'LI',name:'大肠经',organ:'大肠',dizhi:'卯时'},
+  {start:7,end:9,code:'ST',name:'胃经',organ:'胃',dizhi:'辰时'},
+  {start:9,end:11,code:'SP',name:'脾经',organ:'脾',dizhi:'巳时'},
+  {start:11,end:13,code:'HT',name:'心经',organ:'心',dizhi:'午时'},
+  {start:13,end:15,code:'SI',name:'小肠经',organ:'小肠',dizhi:'未时'},
+  {start:15,end:17,code:'BL',name:'膀胱经',organ:'膀胱',dizhi:'申时'},
+  {start:17,end:19,code:'KI',name:'肾经',organ:'肾',dizhi:'酉时'},
+  {start:19,end:21,code:'PC',name:'心包经',organ:'心包',dizhi:'戌时'},
+  {start:21,end:23,code:'TE',name:'三焦经',organ:'三焦',dizhi:'亥时'},
+  {start:23,end:1,code:'GB',name:'胆经',organ:'胆',dizhi:'子时'},
+  {start:1,end:3,code:'LR',name:'肝经',organ:'肝',dizhi:'丑时'}
+];
+
+// ===== LOADED DATA =====
+let pointsData = [], meridiansData = {}, extraData = [], examData = [], meridianPathsData = {};
+let meridianTubeMeshes = {}; // mKey -> {left, right}
+let flowParticles = []; // comet trails
+let tubeShaderUniforms = [];
+const sharedFlowTime = { value: 0 };  // shared across all tube materials
+
+// ===== THREE.JS =====
+let camera, scene, renderer, controls, raycaster, mouse;
+let bodyMesh = null, eyesMesh = null, outlineObj = null, pointMeshes = [], lineMeshes = [];
+let flowEnabled = false;
+let viewMode = 'baimiao'; // 'baimiao' | 'xieshi' | 'toushi'
+let skinMatBaimiao, skinMatXieshi, skinMatToushi;
+let skyboxTex = null;
+let skyboxMesh = null;
+let labelCanvas, labelCtx;
+let eyeMatBaimiao, eyeMatXieshi, eyeMatToushi;
+let ambientLight, dirLight1, dirLight2, dirLight3, dirLight4;
+let hoveredPt = null, selectedPt = null;
+let autoRotate = false, targetPos = null, targetLook = null, animating = false;
+const clock = new THREE.Clock();
+let currentFilter = 'all';
+let introAnim = true;
+
+// Exam state
+let examActive = false, examQuestions = [], examIndex = 0, examScore = 0;
+
+const tooltip = document.getElementById('tooltip');
+const panel = document.getElementById('panel');
+const loading = document.getElementById('loading');
+const loadProgress = document.getElementById('load-progress');
+
+// ===== FAVORITES =====
+function getFavs() { try { return JSON.parse(localStorage.getItem('acu_favs') || '[]'); } catch(e) { return []; } }
+function setFavs(arr) { localStorage.setItem('acu_favs', JSON.stringify(arr)); }
+function isFav(code) { return getFavs().includes(code); }
+function toggleFav(code) {
+  let favs = getFavs();
+  if (favs.includes(code)) favs = favs.filter(c => c !== code);
+  else favs.push(code);
+  setFavs(favs);
+  return favs.includes(code);
+}
+
+// ===== DATA LOADING =====
+async function loadAllData() {
+  let loaded = 0;
+  const total = 5;
+  const update = () => { loaded++; loadProgress.style.width = (loaded/total*40)+'%'; };
+
+  try {
+    const [pRes, mRes, eRes, exRes, mpRes] = await Promise.all([
+      fetch('data/points.json').then(r => r.json()),
+      fetch('data/meridians.json').then(r => r.json()),
+      fetch('data/extra.json').then(r => r.json()),
+      fetch('data/exam.json').then(r => r.json()),
+      fetch('data/meridian_paths.json').then(r => r.json())
+    ]);
+    pointsData = pRes; update();
+    meridiansData = mRes; update();
+    extraData = eRes; update();
+    examData = exRes; update();
+    meridianPathsData = mpRes; update();
+  } catch(e) {
+    console.warn('Data files load error, using inline DB_RAW:', e);
+  }
+
+  // Build DB lookup: merge loaded points with inline DB_RAW
+  const DB = {};
+  DB_RAW.forEach(d => { if(d.c) DB[d.c] = d; });
+  // Overlay loaded data (has qx, gj fields)
+  pointsData.forEach(d => {
+    if(d.c) {
+      if (!DB[d.c]) DB[d.c] = d;
+      else { DB[d.c].qx = d.qx; DB[d.c].gj = d.gj; }
+    }
+  });
+
+  // Build POINTS array
+  const POINTS = [];
+  Object.entries(POS).forEach(([key, arr]) => {
+    const code = key;
+    const mCode = key.replace(/\d+/g,'');
+    const side = arr[0];
+    const x = arr[1], y = arr[2], z = arr[3];
+    const db = DB[code] || {};
+    POINTS.push({
+      id: code, m: mCode, side,
+      name: db.n || code, pinyin: db.p || '', loc: db.l || '', func: db.f || '', needle: db.k || '', traits: db.t || '',
+      qx: db.qx || '', gj: db.gj || '',
+      x, y, z
+    });
+    if (side !== 0) {
+      POINTS.push({
+        id: code + '_R', m: mCode, side: -side,
+        name: db.n || code, pinyin: db.p || '', loc: db.l || '', func: db.f || '', needle: db.k || '', traits: db.t || '',
+        qx: db.qx || '', gj: db.gj || '',
+        x: -x, y, z, mirrored: true
+      });
+    }
+  });
+
+  return { POINTS, DB };
+}
+
+// ===== MAIN INIT =====
+let POINTS = [];
+let DB = {};
+
+async function main() {
+  const data = await loadAllData();
+  POINTS = data.POINTS;
+  DB = data.DB;
+  init();
+  animate();
+}
+main();
+
+function init() {
+  scene = new THREE.Scene();
+  scene.background = null;
+
+  camera = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, 0.1, 2000);
+  camera.position.set(0, 40, 200);
+
+  renderer = new THREE.WebGLRenderer({antialias:true, alpha:false});
+  renderer.setClearColor(0xF5F0E6, 1);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.toneMapping = THREE.NoToneMapping;
+  document.body.appendChild(renderer.domElement);
+
+  // Label overlay canvas
+  labelCanvas = document.createElement('canvas');
+  labelCanvas.style.cssText = 'position:fixed;top:0;left:0;pointer-events:none;z-index:5';
+  document.body.appendChild(labelCanvas);
+  labelCtx = labelCanvas.getContext('2d');
+
+  // WebGL context loss recovery
+  renderer.domElement.addEventListener('webglcontextlost', e => {
+    e.preventDefault();
+    console.warn('WebGL context lost — will restore');
+  });
+  renderer.domElement.addEventListener('webglcontextrestored', () => {
+    console.warn('WebGL context restored');
+    renderer.setSize(innerWidth, innerHeight);
+    camera.position.set(0, 20, 120);
+    controls.target.set(0, 10, 0);
+    animating = false;
+  });
+
+  // Lighting — all 4 created, intensities managed by setViewMode()
+  ambientLight = new THREE.AmbientLight(0xFFF8F0, 1.2);
+  scene.add(ambientLight);
+  dirLight1 = new THREE.DirectionalLight(0xFFFFFF, 1.5);
+  dirLight1.position.set(50, 80, 60);
+  scene.add(dirLight1);
+  dirLight2 = new THREE.DirectionalLight(0xF0EAE0, 0.4);
+  dirLight2.position.set(-40, -20, -50);
+  scene.add(dirLight2);
+  dirLight3 = new THREE.DirectionalLight(0xF0EAE0, 0);
+  dirLight3.position.set(0, 30, -60);
+  scene.add(dirLight3);
+  dirLight4 = new THREE.DirectionalLight(0xFFF8F0, 0);
+  dirLight4.position.set(0, -40, 40);
+  scene.add(dirLight4);
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 20;
+  controls.maxDistance = 350;
+  controls.maxPolarAngle = Math.PI * 0.92;
+  controls.minPolarAngle = Math.PI * 0.08;
+  controls.zoomSpeed = 0.8;
+  controls.rotateSpeed = 0.6;
+  controls.autoRotate = false;
+  controls.autoRotateSpeed = 0.8;
+  controls.target.set(0, 10, 0);
+  controls.update();
+
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+
+  buildBody();
+  createPoints();
+  buildTabs();
+  setupEvents();
+  initZiwu();
+
+  setTimeout(() => document.getElementById('hint').style.opacity = '0', 4000);
+}
+
+// ===== SMOOTH NORMALS ACROSS UV SEAMS =====
+function smoothNormalsAcrossSeams(geometry) {
+  const pos = geometry.attributes.position;
+  const norm = geometry.attributes.normal;
+  if (!pos || !norm) return;
+  const map = new Map();
+  for (let i = 0; i < pos.count; i++) {
+    const key = `${pos.getX(i).toFixed(4)},${pos.getY(i).toFixed(4)},${pos.getZ(i).toFixed(4)}`;
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(i);
+  }
+  for (const indices of map.values()) {
+    if (indices.length <= 1) continue;
+    let nx = 0, ny = 0, nz = 0;
+    for (const i of indices) {
+      nx += norm.getX(i);
+      ny += norm.getY(i);
+      nz += norm.getZ(i);
+    }
+    const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
+    if (len > 0) {
+      nx /= len; ny /= len; nz /= len;
+      for (const i of indices) norm.setXYZ(i, nx, ny, nz);
+    }
+  }
+  norm.needsUpdate = true;
+}
+
+// ===== LOAD BODY MODEL =====
+function buildBody() {
+  const texLoader = new THREE.TextureLoader();
+
+  // Load textures (used by 写实 mode)
+  const albedoTex = texLoader.load('model/T_Male_PF_Albedo.jpg');
+  const normalTex = texLoader.load('model/T_Male_PF_N.jpg');
+  albedoTex.colorSpace = THREE.SRGBColorSpace;
+
+  // Load 水墨山水 skybox (sphere mesh at orbit center — scales with zoom)
+  texLoader.load('model/skybox_ink_q75.jpg', (tex) => {
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.wrapS = THREE.ClampToEdgeWrapping;
+    tex.wrapT = THREE.ClampToEdgeWrapping;
+    skyboxTex = tex;
+    const skyGeo = new THREE.SphereGeometry(600, 64, 64);
+    const skyMat = new THREE.MeshBasicMaterial({
+      map: tex, side: THREE.BackSide, depthWrite: false
+    });
+    skyboxMesh = new THREE.Mesh(skyGeo, skyMat);
+    skyboxMesh.position.set(0, 10, 0); // centered at orbit target
+    skyboxMesh.rotation.y = 60 * Math.PI / 180; // 逆时针旋转60°
+    skyboxMesh.renderOrder = -1;
+    scene.add(skyboxMesh);
+  });
+
+  // --- 白描 skin: flat cream toon shader ---
+  skinMatBaimiao = new THREE.MeshStandardMaterial({
+    color: 0xF0E8D8, roughness: 1.0, metalness: 0.0, side: THREE.DoubleSide
+  });
+  skinMatBaimiao.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <opaque_fragment>',
+      `#include <opaque_fragment>
+       float lum = dot(gl_FragColor.rgb, vec3(0.299, 0.587, 0.114));
+       float toon = lum > 0.65 ? 1.0 : lum > 0.35 ? 0.82 : 0.65;
+       gl_FragColor.rgb = vec3(0.94, 0.91, 0.85) * toon;`
+    );
+  };
+
+  // --- 写实 skin: textured physical material with fresnel rim ---
+  skinMatXieshi = new THREE.MeshPhysicalMaterial({
+    map: albedoTex, normalMap: normalTex,
+    normalScale: new THREE.Vector2(0.5, 0.5),
+    roughness: 0.72, metalness: 0.0,
+    clearcoat: 0.03, clearcoatRoughness: 0.6,
+    sheen: 0.08, sheenRoughness: 0.6,
+    sheenColor: new THREE.Color(0xF5E8D0),
+    side: THREE.DoubleSide
+  });
+  skinMatXieshi.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <opaque_fragment>',
+      `#include <opaque_fragment>
+       float NdotV = dot(normalize(vViewPosition), normal);
+       float rim = pow(clamp(1.0 - NdotV, 0.0, 1.0), 3.0);
+       gl_FragColor.rgb += vec3(0.90, 0.85, 0.78) * rim * 0.3;`
+    );
+  };
+
+  // --- 透视 skin: wireframe ---
+  skinMatToushi = new THREE.MeshStandardMaterial({
+    color: 0xF0E8D8, roughness: 1.0, metalness: 0.0,
+    wireframe: true, transparent: true, opacity: 0.3, side: THREE.DoubleSide
+  });
+
+  // Eye materials
+  const eyeTex = texLoader.load('model/T_PF_Eyes_albedo.jpg');
+  eyeTex.colorSpace = THREE.SRGBColorSpace;
+
+  eyeMatBaimiao = new THREE.MeshStandardMaterial({
+    color: 0xF0E8D8, roughness: 1.0, metalness: 0.0, side: THREE.DoubleSide
+  });
+  eyeMatBaimiao.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <opaque_fragment>',
+      `#include <opaque_fragment>
+       float lum = dot(gl_FragColor.rgb, vec3(0.299, 0.587, 0.114));
+       float toon = lum > 0.65 ? 1.0 : lum > 0.35 ? 0.82 : 0.65;
+       gl_FragColor.rgb = vec3(0.94, 0.91, 0.85) * toon;`
+    );
+  };
+  eyeMatXieshi = new THREE.MeshPhysicalMaterial({
+    map: eyeTex, roughness: 0.3, metalness: 0.0,
+    clearcoat: 0.6, clearcoatRoughness: 0.1, side: THREE.DoubleSide
+  });
+  eyeMatToushi = new THREE.MeshStandardMaterial({
+    color: 0xFFFFFF, wireframe: true, transparent: true, opacity: 0.3, side: THREE.DoubleSide
+  });
+
+  const dracoLoader = new DRACOLoader();
+  dracoLoader.setDecoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/');
+  const gltfLoader = new GLTFLoader();
+  gltfLoader.setDRACOLoader(dracoLoader);
+
+  gltfLoader.load('model/body_draco.glb', (gltf) => {
+    const obj = gltf.scene;
+    obj.traverse(ch => {
+      if (ch.isMesh) {
+        ch.geometry = mergeVertices(ch.geometry);
+        ch.geometry.computeVertexNormals();
+        smoothNormalsAcrossSeams(ch.geometry);
+        // Fix UV Y-flip: Unity UVs have origin at top-left, flip to bottom-left
+        const uv = ch.geometry.attributes.uv;
+        if (uv) {
+          for (let i = 0; i < uv.count; i++) {
+            uv.setY(i, 1 - uv.getY(i));
+          }
+          uv.needsUpdate = true;
+        }
+        ch.material = skinMatBaimiao;
+      }
+    });
+    obj.scale.set(95.3, 95.3, 95.3);
+    obj.position.y = -11.2;
+    bodyMesh = obj;
+    scene.add(obj);
+
+    // Ink outline
+    const outlineMat = new THREE.ShaderMaterial({
+      vertexShader: `
+        varying float vEdge;
+        void main() {
+          vec3 pos = position + normal * 0.004;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+          vec3 viewDir = normalize(-(modelViewMatrix * vec4(position, 1.0)).xyz);
+          vec3 vNorm = normalize(normalMatrix * normal);
+          vEdge = 1.0 - abs(dot(viewDir, vNorm));
+        }
+      `,
+      fragmentShader: `
+        varying float vEdge;
+        void main() {
+          float alpha = pow(vEdge, 1.5) * 0.5;
+          gl_FragColor = vec4(0.12, 0.10, 0.08, alpha);
+        }
+      `,
+      side: THREE.BackSide,
+      transparent: true,
+      depthWrite: false
+    });
+    outlineObj = obj.clone(true);
+    outlineObj.traverse(ch => {
+      if (ch.isMesh) ch.material = outlineMat;
+    });
+    scene.add(outlineObj);
+
+    // Eyes
+    gltfLoader.load('model/eyes_draco.glb', (eyeGltf) => {
+      const eyeObj = eyeGltf.scene;
+      eyeObj.traverse(ch => {
+        if (ch.isMesh) {
+          ch.geometry = mergeVertices(ch.geometry);
+          ch.geometry.computeVertexNormals();
+          ch.material = eyeMatBaimiao;
+        }
+      });
+      eyeObj.scale.set(95.3, 95.3, 95.3);
+      eyeObj.position.y = -11.2;
+      eyesMesh = eyeObj;
+      scene.add(eyeObj);
+    });
+
+    loading.classList.add('hide');
+  },
+  (xhr) => {
+    if (xhr.lengthComputable) {
+      const pct = Math.round(xhr.loaded / xhr.total * 100);
+      loading.querySelector('p').textContent = `加载模型 ${pct}%`;
+      loadProgress.style.width = (40 + pct * 0.6) + '%';
+    }
+  },
+  () => {
+    const geo = new THREE.CapsuleGeometry(6, 80, 16, 32);
+    const mat = new THREE.MeshPhongMaterial({color:0xd4b896, transparent:true, opacity:0.85});
+    const body = new THREE.Mesh(geo, mat);
+    body.position.y = -10;
+    bodyMesh = body;
+    scene.add(body);
+    loading.classList.add('hide');
+  });
+}
+
+// ===== ACUPOINTS =====
+function createPoints() {
+  const geo = new THREE.SphereGeometry(0.45, 16, 16);
+
+  // NPR ink-dot outline: dark border ring around each point
+  const ringGeo = new THREE.SphereGeometry(0.58, 16, 16);
+  const inkRingMat = new THREE.ShaderMaterial({
+    vertexShader: `
+      varying vec3 vNorm;
+      varying vec3 vView;
+      void main() {
+        vNorm = normalize(normalMatrix * normal);
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        vView = -mv.xyz;
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vNorm;
+      varying vec3 vView;
+      void main() {
+        float NdotV = dot(normalize(vNorm), normalize(vView));
+        float edge = 1.0 - abs(NdotV);
+        float ring = smoothstep(0.35, 0.65, edge);
+        if (ring < 0.1) discard;
+        gl_FragColor = vec4(0.15, 0.12, 0.10, ring * 0.7);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    side: THREE.BackSide
+  });
+
+  POINTS.forEach(pt => {
+    const mInfo = M[pt.m];
+    if (!mInfo) return;
+    // NPR ink dot — flat fill with slight darkened edge
+    const mat = new THREE.MeshBasicMaterial({ color: mInfo.color });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(pt.x, pt.y, pt.z);
+    mesh.userData = pt;
+    scene.add(mesh);
+    pointMeshes.push(mesh);
+    // Dark ink outline ring
+    const ring = new THREE.Mesh(ringGeo, inkRingMat);
+    ring.raycast = () => {};
+    mesh.add(ring);
+
+  });
+
+  // Per-meridian flow parameters (same for left & right)
+  const MERIDIAN_KEYS_LIST = Object.keys(M);
+  const meridianFlowParams = {};
+  MERIDIAN_KEYS_LIST.forEach((k, i) => {
+    const t = i / MERIDIAN_KEYS_LIST.length;
+    meridianFlowParams[k] = {
+      phase: t * 6.28,
+      speed: 0.12 + (((i * 7 + 3) % 14) / 14) * 0.18,
+      freq: 0.025 + (((i * 5 + 1) % 14) / 14) * 0.02
+    };
+  });
+
+  // Tube mesh material — 墨线 + 金光流动 (ink stroke + gold qi flow)
+  function makeTubeMaterial(color, mKey) {
+    const fp = meridianFlowParams[mKey] || { phase: 0, speed: 0.2, freq: 0.03 };
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0x3A3228,
+      emissive: 0x3A3228,
+      emissiveIntensity: 0.1,
+      transparent: true,
+      opacity: 1.0,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      roughness: 0.9,
+      metalness: 0.0
+    });
+    // Unique cache key per meridian so Three.js compiles separate programs
+    mat.customProgramCacheKey = () => 'tube_' + mKey + '_' + fp.phase.toFixed(3);
+    mat.onBeforeCompile = (shader) => {
+      shader.uniforms.uTime = sharedFlowTime;  // shared reference — always up to date
+      shader.uniforms.uPhase = { value: fp.phase };
+      shader.uniforms.uSpeed = { value: fp.speed };
+      shader.uniforms.uFreq = { value: fp.freq };
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <common>',
+        '#include <common>\nvarying vec3 vWPos;'
+      );
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <worldpos_vertex>',
+        '#include <worldpos_vertex>\nvWPos = (modelMatrix * vec4(position, 1.0)).xyz;'
+      );
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <common>',
+        `#include <common>
+         uniform float uTime;
+         uniform float uPhase;
+         uniform float uSpeed;
+         uniform float uFreq;
+         varying vec3 vWPos;
+         float inkHash(float n) { return fract(sin(n) * 43758.5453123); }
+         float inkNoise(float x) {
+           float i = floor(x);
+           float f = fract(x);
+           f = f * f * (3.0 - 2.0 * f);
+           return mix(inkHash(i), inkHash(i + 1.0), f);
+         }`
+      );
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <emissivemap_fragment>',
+        `#include <emissivemap_fragment>
+         float pressure = inkNoise(vWPos.y * 0.04 + uPhase * 2.0);
+         pressure = 0.3 + smoothstep(0.25, 0.75, pressure) * 0.7;
+         totalEmissiveRadiance *= pressure * 1.5;`
+      );
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <opaque_fragment>',
+        `#include <opaque_fragment>
+         float NdotV = abs(dot(normalize(vViewPosition), normal));
+
+         // --- Brush stroke texture (static ink) ---
+         float edgeNoise = inkNoise(vWPos.y * 0.12 + vWPos.x * 0.08 + uPhase) * 0.25;
+         float brushEdge = smoothstep(0.0, 0.35 + edgeNoise, NdotV);
+
+         float t2 = vWPos.y * uFreq * 0.6 - uPhase;
+         float nn1 = inkNoise(t2 * 5.0);
+         float nn2 = inkNoise(t2 * 11.0 + 137.0);
+         float nn3 = inkNoise(t2 * 2.5 + 274.0);
+         float brushDensity = nn1 * nn3 + nn2 * 0.25;
+         brushDensity = smoothstep(0.12, 0.55, brushDensity);
+
+         float bp = inkNoise(vWPos.y * 0.04 + uPhase * 2.0);
+         bp = 0.3 + smoothstep(0.25, 0.75, bp) * 0.7;
+
+         // --- Base ink alpha ---
+         float inkAlpha = brushEdge * (0.3 + brushDensity * 0.7) * bp;
+
+         // --- 金光流动 (gold qi flow) ---
+         float pathPos = vWPos.y * 0.06 + vWPos.x * 0.015 + uPhase;
+         float travelT = pathPos - uTime * uSpeed * 2.5;
+         float wave = fract(travelT * 0.5);
+         // Bright head with wider trailing glow
+         float flowHead = smoothstep(0.0, 0.05, wave) * smoothstep(0.35, 0.12, wave);
+         float flowGlow = smoothstep(0.0, 0.03, wave) * smoothstep(0.55, 0.20, wave) * 0.5;
+         float flowBand = flowHead + flowGlow;
+
+         // --- Final alpha ---
+         gl_FragColor.a = clamp(inkAlpha * 0.9 + flowBand * 0.7, 0.0, 0.95);
+
+         // --- Color ---
+         float darkness = brushDensity * bp;
+         vec3 inkCol = mix(gl_FragColor.rgb * 0.15, gl_FragColor.rgb * 1.6, darkness);
+         vec3 goldGlow = vec3(0.85, 0.68, 0.35);
+         gl_FragColor.rgb = mix(inkCol, goldGlow, flowBand * 0.9);`
+      );
+    };
+    return mat;
+  }
+
+  // Load tube meshes from 针灸大师 app
+  const tubeLoader = new OBJLoader();
+  Object.keys(M).forEach(mKey => {
+    tubeLoader.load(`model/meridians/${mKey}.obj`, (obj) => {
+      const color = new THREE.Color(M[mKey].color);
+      const tubeMat = makeTubeMaterial(color, mKey);
+      obj.traverse(ch => {
+        if (ch.isMesh) {
+          ch.geometry.computeVertexNormals();
+          ch.material = tubeMat;
+        }
+      });
+      obj.scale.set(95.3, 95.3, 95.3);
+      obj.position.y = -11.2;
+      obj.visible = false;
+      obj.userData = {meridian: mKey};
+      scene.add(obj);
+
+      const entry = {left: obj, right: null};
+
+      if (mKey !== 'DU' && mKey !== 'RN') {
+        const mirrorMat = makeTubeMaterial(color, mKey);
+        const mirrorObj = obj.clone(true);
+        mirrorObj.traverse(ch => { if (ch.isMesh) ch.material = mirrorMat; });
+        mirrorObj.scale.set(-95.3, 95.3, 95.3);
+        mirrorObj.position.y = -11.2;
+        mirrorObj.visible = false;
+        mirrorObj.userData = {meridian: mKey};
+        scene.add(mirrorObj);
+        entry.right = mirrorObj;
+      }
+
+      meridianTubeMeshes[mKey] = entry;
+    }, undefined, (err) => { console.warn(`Failed to load ${mKey}.obj`, err); });
+  });
+}
+
+// ===== UI: TABS =====
+function buildTabs() {
+  const cont = document.getElementById('mtabs');
+  let html = '<div class="mt active" data-m="all" style="--mc:#C8A058">全部</div>';
+  Object.entries(M).forEach(([k,v]) => {
+    html += `<div class="mt" data-m="${k}" style="--mc:${v.css}">${v.name}</div>`;
+  });
+  cont.innerHTML = html;
+  cont.querySelectorAll('.mt').forEach(t => {
+    t.addEventListener('click', () => {
+      cont.querySelectorAll('.mt').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      currentFilter = t.dataset.m;
+      filterMeridian(currentFilter);
+      showMeridianBanner(currentFilter);
+    });
+  });
+}
+
+function showMeridianBanner(mKey) {
+  const banner = document.getElementById('mt-info-banner');
+  if (mKey === 'all') { banner.classList.remove('show'); return; }
+  const mInfo = M[mKey];
+  if (!mInfo) { banner.classList.remove('show'); return; }
+  const count = POINTS.filter(p => p.m === mKey && !p.mirrored).length;
+  banner.innerHTML = `<span class="mib-name" style="color:${mInfo.css}">${mInfo.full}</span><span class="mib-count">${count}穴</span><span class="mib-link" onclick="openCircToMeridian('${mKey}')">详情</span>`;
+  banner.classList.add('show');
+  clearTimeout(banner._timer);
+  banner._timer = setTimeout(() => banner.classList.remove('show'), 5000);
+}
+
+function filterMeridian(m) {
+  currentFilter = m;
+  pointMeshes.forEach(mesh => {
+    mesh.visible = m === 'all' || mesh.userData.m === m;
+  });
+  lineMeshes.forEach(line => {
+    line.visible = m === 'all' || line.userData.meridian === m;
+  });
+  Object.entries(meridianTubeMeshes).forEach(([mKey, entry]) => {
+    const vis = flowEnabled && (m === 'all' || mKey === m);
+    if (entry.left) entry.left.visible = vis;
+    if (entry.right) entry.right.visible = vis;
+  });
+}
+
+// ===== EVENTS =====
+function setupEvents() {
+  const dpr = Math.min(devicePixelRatio, 2);
+  labelCanvas.width = innerWidth * dpr;
+  labelCanvas.height = innerHeight * dpr;
+  labelCanvas.style.width = innerWidth + 'px';
+  labelCanvas.style.height = innerHeight + 'px';
+  addEventListener('resize', () => {
+    camera.aspect = innerWidth/innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+    labelCanvas.width = innerWidth * dpr;
+    labelCanvas.height = innerHeight * dpr;
+    labelCanvas.style.width = innerWidth + 'px';
+    labelCanvas.style.height = innerHeight + 'px';
+  });
+
+  renderer.domElement.addEventListener('mousemove', e => {
+    mouse.x = (e.clientX/innerWidth)*2-1;
+    mouse.y = -(e.clientY/innerHeight)*2+1;
+    raycaster.setFromCamera(mouse, camera);
+    const visible = pointMeshes.filter(m => m.visible);
+    const hits = raycaster.intersectObjects(visible);
+    if (hits.length > 0) {
+      hoveredPt = hits[0].object;
+      const pt = hoveredPt.userData;
+      if (pt && pt.id) {
+        tooltip.textContent = `${pt.id} ${pt.name}`;
+        tooltip.style.left = e.clientX+14+'px';
+        tooltip.style.top = e.clientY-8+'px';
+        tooltip.classList.add('show');
+        renderer.domElement.style.cursor = 'pointer';
+      }
+    } else {
+      hoveredPt = null;
+      tooltip.classList.remove('show');
+      renderer.domElement.style.cursor = 'default';
+    }
+  });
+
+  renderer.domElement.addEventListener('click', () => {
+    raycaster.setFromCamera(mouse, camera);
+    const visible = pointMeshes.filter(m => m.visible);
+    const hits = raycaster.intersectObjects(visible);
+    if (hits.length > 0) {
+      if (examActive) {
+        handleExamClick(hits[0].object);
+      } else {
+        selectPoint(hits[0].object);
+      }
+    }
+  });
+
+  renderer.domElement.addEventListener('touchstart', e => {
+    if (e.touches.length!==1) return;
+    const t = e.touches[0];
+    mouse.x = (t.clientX/innerWidth)*2-1;
+    mouse.y = -(t.clientY/innerHeight)*2+1;
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObjects(pointMeshes.filter(m=>m.visible));
+    if (hits.length > 0) {
+      e.preventDefault();
+      if (examActive) handleExamClick(hits[0].object);
+      else selectPoint(hits[0].object);
+    }
+  }, {passive:false});
+
+  // Search
+  const si = document.getElementById('search-input');
+  const sr = document.getElementById('search-results');
+  si.addEventListener('input', () => {
+    const q = si.value.trim().toLowerCase();
+    if (!q) { sr.classList.remove('show'); return; }
+    const results = POINTS.filter(p => !p.mirrored && (
+      p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q) ||
+      (p.pinyin && p.pinyin.toLowerCase().replace(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/g, c => 'aaaaeeeeiiiiooooouuuuvvvv'['āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ'.indexOf(c)] || c).includes(q))
+    )).slice(0,12);
+    if (!results.length) { sr.classList.remove('show'); return; }
+    sr.innerHTML = results.map(p => {
+      const mc = M[p.m]?.css||'#888';
+      return `<div class="sr-item" data-id="${p.id}"><span class="sr-dot" style="background:${mc}"></span><span class="sr-name">${p.name}</span><span class="sr-code">${p.pinyin ? p.pinyin+' · ' : ''}${p.id} · ${M[p.m]?.name||''}</span></div>`;
+    }).join('');
+    sr.classList.add('show');
+    sr.querySelectorAll('.sr-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const mesh = pointMeshes.find(m => m.userData.id === item.dataset.id);
+        if (mesh) selectPoint(mesh);
+        sr.classList.remove('show');
+        si.value = '';
+      });
+    });
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#search-box') && !e.target.closest('#search-results'))
+      sr.classList.remove('show');
+  });
+
+  // Buttons
+  document.getElementById('btn-circ').addEventListener('click', openCirc);
+  document.getElementById('btn-mode-bm').addEventListener('click', () => setViewMode('baimiao'));
+  document.getElementById('btn-mode-xs').addEventListener('click', () => setViewMode('xieshi'));
+  document.getElementById('btn-mode-ts').addEventListener('click', () => setViewMode('toushi'));
+  document.getElementById('btn-flow').addEventListener('click', toggleFlow);
+  document.getElementById('btn-extra').addEventListener('click', openExtra);
+  document.getElementById('btn-exam').addEventListener('click', startExam);
+  document.getElementById('btn-fav').addEventListener('click', openFav);
+  document.getElementById('btn-rot').addEventListener('click', () => {
+    autoRotate = !autoRotate;
+    document.getElementById('btn-rot').classList.toggle('active', autoRotate);
+  });
+
+}
+
+// ===== SELECT POINT =====
+function selectPoint(mesh) {
+  // Guard: if mesh has no valid userData (e.g. child ring mesh hit), skip
+  const pt = mesh.userData;
+  if (!pt || pt.x === undefined || pt.y === undefined || pt.z === undefined) return;
+
+  if (selectedPt) { selectedPt.material.color.set(M[selectedPt.userData.m]?.color || '#888'); selectedPt.scale.setScalar(1); }
+  selectedPt = mesh;
+  mesh.material.color.set('#C8A058');
+  mesh.scale.setScalar(1.5);
+  autoRotate = false;
+  document.getElementById('btn-rot').classList.remove('active');
+  introAnim = false;
+
+  // Compute camera position based on body region + surface direction
+  const camDist = 50;
+  const radialLen = Math.sqrt(pt.x * pt.x + pt.z * pt.z);
+  const absX = Math.abs(pt.x);
+  let offX, offY, offZ;
+
+  if (pt.y > 55 && pt.z >= 0 && radialLen < 10) {
+    // Face / eyes — view from front
+    offX = pt.x * 2;
+    offY = 5;
+    offZ = camDist;
+  } else if (pt.y > 60 && radialLen < 15) {
+    // Head top / crown / back of head — view from above-front
+    offX = 0;
+    offY = 35;
+    offZ = 30;
+  } else if (pt.y > 50) {
+    // Head sides / neck — use radial direction, tilt up
+    const rLen = radialLen || 1;
+    offX = (pt.x / rLen) * camDist * 0.6;
+    offY = 15;
+    offZ = (pt.z / rLen) * camDist * 0.6 + (pt.z >= 0 ? 20 : -20);
+  } else if (absX > 25) {
+    // Arms / hands — view from the side the limb is on
+    const rLen = radialLen || 1;
+    offX = (pt.x / rLen) * camDist;
+    offY = 8;
+    offZ = (pt.z / rLen) * camDist * 0.3 + 25;
+  } else if (pt.y < -80) {
+    // Feet — view from front-below
+    offX = (pt.x > 0 ? 1 : -1) * 15;
+    offY = -15;
+    offZ = 45;
+  } else if (pt.y < -40) {
+    // Lower legs / knees — view from the front-side
+    offX = (pt.x > 0 ? 1 : -1) * 20;
+    offY = 5;
+    offZ = pt.z < -8 ? -40 : 40;
+  } else if (pt.z > -10 && (radialLen < 12 || (radialLen < 18 && pt.z > -5))) {
+    // Front / lateral torso points — view from front
+    offX = (pt.x > 0 ? 1 : pt.x < 0 ? -1 : 0) * 15;
+    offY = 5;
+    offZ = camDist;
+  } else {
+    // Torso / upper legs / back — radial outward, biased forward for side points
+    const rLen = radialLen || 1;
+    offX = (pt.x / rLen) * camDist;
+    offY = 5;
+    offZ = (pt.z / rLen) * camDist;
+    // For lateral points (small |z|), add forward bias so camera isn't behind
+    if (pt.z > -12 && Math.abs(pt.x) > 8) {
+      offZ += 20;
+    }
+  }
+
+  targetPos = new THREE.Vector3(pt.x + offX, pt.y + offY, pt.z + offZ);
+  targetLook = new THREE.Vector3(pt.x, pt.y, pt.z);
+  animating = true;
+
+  showPanel(pt);
+}
+
+function showPanel(pt) {
+  const mInfo = M[pt.m] || {};
+  const funcList = pt.func ? pt.func.split(/[。；]/).filter(s=>s.replace(/[①-⑳]/g,'').trim()).map(s=>s.replace(/^[①-⑳]/,'').trim()) : [];
+  const favActive = isFav(pt.id) ? ' active' : '';
+
+  let h = `<div style="margin-bottom:16px">
+    <div style="display:flex;align-items:center">
+      <div class="pn" style="color:${mInfo.css||'#fff'}">${pt.name}</div>
+      <button class="fav-btn${favActive}" onclick="toggleFavBtn('${pt.id}',this)" title="收藏">${isFav(pt.id)?'★':'☆'}</button>
+    </div>
+    <div class="pp">${pt.pinyin ? pt.pinyin + ' · ' : ''}${pt.id}</div>
+    ${pt.traits ? `<div style="font-size:12px;color:#C8A058;margin-top:4px">${pt.traits}</div>` : ''}
+    <span class="pm" style="background:color-mix(in srgb,${mInfo.css||'#888'} 15%,transparent);color:${mInfo.css||'#888'}">${mInfo.full||pt.m}</span>
+  </div>`;
+
+  if (pt.gj) h += `<div class="ps"><h3>归经</h3><p>${pt.gj}</p></div>`;
+  if (pt.loc) h += `<div class="ps"><h3>定位</h3><p>${pt.loc}</p></div>`;
+  if (pt.qx) h += `<div class="ps"><h3>取穴方法</h3><p>${pt.qx}</p></div>`;
+  if (funcList.length) h += `<div class="ps"><h3>主治</h3><ul>${funcList.map(f=>`<li>${f}</li>`).join('')}</ul></div>`;
+  if (pt.needle) h += `<div class="ps"><h3>刺法</h3><p>${pt.needle}</p></div>`;
+
+  // Related points
+  const related = POINTS.filter(p => p.m === pt.m && !p.mirrored && p.id !== pt.id && p.id !== pt.id.replace('_R',''));
+  if (related.length) {
+    h += `<div class="ps"><h3>同经穴位 (${related.length})</h3><div class="rp">`;
+    related.forEach(r => {
+      h += `<span data-id="${r.id}">${r.name}</span>`;
+    });
+    h += '</div></div>';
+  }
+
+  document.getElementById('pc').innerHTML = h;
+  panel.classList.add('open');
+
+  document.querySelectorAll('.rp span').forEach(s => {
+    s.addEventListener('click', () => {
+      const mesh = pointMeshes.find(m => m.userData.id === s.dataset.id);
+      if (mesh) selectPoint(mesh);
+    });
+  });
+}
+
+window.toggleFavBtn = (code, btn) => {
+  const now = toggleFav(code);
+  btn.textContent = now ? '★' : '☆';
+  btn.classList.toggle('active', now);
+};
+
+window.closePanel = () => {
+  panel.classList.remove('open');
+  if (selectedPt) { selectedPt.material.color.set(M[selectedPt.userData.m]?.color || '#888'); selectedPt.scale.setScalar(1); selectedPt=null; }
+};
+
+window.resetCamera = () => {
+  // Hard set camera position first to recover from any NaN/bad state
+  if (isNaN(camera.position.x) || isNaN(camera.position.y) || isNaN(camera.position.z)) {
+    camera.position.set(0, 20, 120);
+    controls.target.set(0, 10, 0);
+    animating = false;
+  } else {
+    targetPos = new THREE.Vector3(0, 20, 120);
+    targetLook = new THREE.Vector3(0, 10, 0);
+    animating = true;
+  }
+  closePanel();
+};
+
+function setViewMode(mode) {
+  viewMode = mode;
+  document.querySelectorAll('[id^="btn-mode-"]').forEach(b => b.classList.remove('active'));
+  const btnId = mode === 'baimiao' ? 'btn-mode-bm' : mode === 'xieshi' ? 'btn-mode-xs' : 'btn-mode-ts';
+  document.getElementById(btnId).classList.add('active');
+
+  if (!bodyMesh) return;
+
+  const skinMat = mode === 'baimiao' ? skinMatBaimiao : mode === 'xieshi' ? skinMatXieshi : skinMatToushi;
+  const eyeMat = mode === 'baimiao' ? eyeMatBaimiao : mode === 'xieshi' ? eyeMatXieshi : eyeMatToushi;
+
+  bodyMesh.traverse(ch => { if (ch.isMesh) ch.material = skinMat; });
+  if (eyesMesh) eyesMesh.traverse(ch => { if (ch.isMesh) ch.material = eyeMat; });
+
+  if (outlineObj) outlineObj.visible = (mode !== 'toushi');
+
+  scene.background = null; // skybox mesh provides background in all modes
+
+  if (mode === 'xieshi') {
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    ambientLight.color.set(0xF5EDE0); ambientLight.intensity = 1.8;
+    dirLight1.color.set(0xFFF2E0); dirLight1.intensity = 2.0;
+    dirLight2.color.set(0xECE2D8); dirLight2.intensity = 0.9;
+    dirLight3.color.set(0xF0EAE0); dirLight3.intensity = 0.6;
+    dirLight4.color.set(0xFFF8F0); dirLight4.intensity = 0.5;
+  } else {
+    renderer.toneMapping = THREE.NoToneMapping;
+    ambientLight.color.set(0xFFF8F0); ambientLight.intensity = 1.2;
+    dirLight1.color.set(0xFFFFFF); dirLight1.intensity = 1.5;
+    dirLight2.color.set(0xF0EAE0); dirLight2.intensity = 0.4;
+    dirLight3.intensity = 0;
+    dirLight4.intensity = 0;
+  }
+}
+
+function toggleFlow() {
+  flowEnabled = !flowEnabled;
+  document.getElementById('btn-flow').classList.toggle('active', flowEnabled);
+  Object.entries(meridianTubeMeshes).forEach(([mKey, entry]) => {
+    const vis = flowEnabled && (currentFilter === 'all' || mKey === currentFilter);
+    if (entry.left) entry.left.visible = vis;
+    if (entry.right) entry.right.visible = vis;
+  });
+}
+
+// ===== MERIDIAN DETAIL MODAL =====
+function openCirc() {
+  const list = document.getElementById('circ-list');
+  list.innerHTML = CIRCS.map((c,i) =>
+    `<div class="ci${i===0?' active':''}" data-i="${i}" data-id="${c.id}"><span class="dot" style="background:${c.color}"></span>${c.name}</div>`
+  ).join('');
+  list.querySelectorAll('.ci').forEach(item => {
+    item.addEventListener('click', () => {
+      list.querySelectorAll('.ci').forEach(x=>x.classList.remove('active'));
+      item.classList.add('active');
+      showCircItem(+item.dataset.i);
+    });
+  });
+  showCircItem(0);
+  document.getElementById('circ-overlay').classList.add('open');
+}
+
+function openCircToMeridian(mKey) {
+  openCirc();
+  const idx = CIRCS.findIndex(c => c.id === mKey);
+  if (idx >= 0) {
+    const list = document.getElementById('circ-list');
+    list.querySelectorAll('.ci').forEach(x=>x.classList.remove('active'));
+    const target = list.querySelector(`[data-id="${mKey}"]`);
+    if (target) { target.classList.add('active'); target.scrollIntoView({block:'center'}); }
+    showCircItem(idx);
+  }
+}
+window.openCircToMeridian = openCircToMeridian;
+
+function showCircItem(i) {
+  const c = CIRCS[i];
+  const view = document.getElementById('circ-view');
+  const mData = meridiansData[c.id];
+
+  let html = `<h3 style="color:${c.color}">${c.name}</h3>`;
+  html += `<p>${c.desc}</p>`;
+
+  if (mData) {
+    if (mData.zz) {
+      html += `<h4>主治概要</h4><p>${mData.zz.replace(/\n/g,'<br>')}</p>`;
+    }
+    if (mData.gj) {
+      html += `<h4>歌诀</h4>`;
+      let gj = mData.gj;
+      // Format sections with 【】
+      gj = gj.replace(/【([^】]+)】/g, '</div><div class="gj-section"><strong style="color:#C8A058">【$1】</strong><br>');
+      if (gj.startsWith('</div>')) gj = gj.substring(6);
+      gj += '</div>';
+      html += gj;
+    }
+  } else {
+    // For extra vessels (chongmai, daimai, etc.) - no meridian data
+    // Already showed desc above
+  }
+
+  view.innerHTML = html;
+}
+
+window.closeCirc = () => document.getElementById('circ-overlay').classList.remove('open');
+document.getElementById('circ-overlay').addEventListener('click', e => { if(e.target.id==='circ-overlay') closeCirc(); });
+
+// ===== EXTRA POINTS MODAL =====
+function openExtra() {
+  renderExtraList('');
+  document.getElementById('extra-overlay').classList.add('open');
+  const searchEl = document.getElementById('extra-search');
+  searchEl.value = '';
+  searchEl.oninput = () => renderExtraList(searchEl.value.trim().toLowerCase());
+}
+
+function renderExtraList(query) {
+  const list = document.getElementById('extra-list');
+  let filtered = extraData;
+  if (query) {
+    filtered = extraData.filter(e =>
+      (e.n && e.n.includes(query)) || (e.c && e.c.toLowerCase().includes(query)) ||
+      (e.dw && e.dw.includes(query)) || (e.zz && e.zz.includes(query))
+    );
+  }
+  if (!filtered.length) {
+    list.innerHTML = '<div style="color:#555;text-align:center;padding:40px">未找到匹配的奇穴</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(e => `
+    <div class="extra-item">
+      <div class="ei-top"><span class="ei-code">${e.c||''}</span><span class="ei-name">${e.n||''}</span></div>
+      <div class="ei-detail">
+        ${e.dw ? `<div><strong>定位：</strong>${e.dw}</div>` : ''}
+        ${e.zz ? `<div><strong>主治：</strong>${e.zz}</div>` : ''}
+        ${e.cz ? `<div><strong>操作：</strong>${e.cz}</div>` : ''}
+        ${e.tx ? `<div><strong>特性：</strong>${e.tx}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+window.closeExtra = () => document.getElementById('extra-overlay').classList.remove('open');
+document.getElementById('extra-overlay').addEventListener('click', e => { if(e.target.id==='extra-overlay') closeExtra(); });
+
+// ===== FAVORITES PANEL =====
+function openFav() {
+  renderFavList();
+  document.getElementById('fav-panel').classList.add('open');
+}
+
+function renderFavList() {
+  const list = document.getElementById('fav-list');
+  const favs = getFavs();
+  if (!favs.length) {
+    list.innerHTML = '<div class="fav-empty">暂无收藏穴位<br>点击穴位详情中的 ☆ 添加收藏</div>';
+    return;
+  }
+  list.innerHTML = favs.map(code => {
+    const pt = POINTS.find(p => p.id === code);
+    if (!pt) return '';
+    const mc = M[pt.m]?.css || '#888';
+    return `<div class="fav-item" data-id="${code}">
+      <span class="fav-dot" style="background:${mc}"></span>
+      <span class="fav-name">${pt.name}</span>
+      <span class="fav-code">${code}</span>
+      <button class="fav-remove" onclick="event.stopPropagation();removeFavItem('${code}')">&times;</button>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('.fav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const mesh = pointMeshes.find(m => m.userData.id === item.dataset.id);
+      if (mesh) { selectPoint(mesh); closeFav(); }
+    });
+  });
+}
+
+window.removeFavItem = (code) => {
+  let favs = getFavs().filter(c => c !== code);
+  setFavs(favs);
+  renderFavList();
+};
+
+window.closeFav = () => document.getElementById('fav-panel').classList.remove('open');
+
+// ===== ZIWU LIUZHU =====
+function getActiveZiwu() {
+  const h = new Date().getHours();
+  return ZIWU.find(z => {
+    if (z.start < z.end) return h >= z.start && h < z.end;
+    return h >= z.start || h < z.end; // crosses midnight (23-1)
+  }) || ZIWU[0];
+}
+
+function initZiwu() {
+  updateZiwuIndicator();
+  setInterval(updateZiwuIndicator, 60000);
+
+  document.getElementById('ziwu-indicator').addEventListener('click', openZiwu);
+}
+
+function updateZiwuIndicator() {
+  const active = getActiveZiwu();
+  const mc = M[active.code]?.css || '#C8A058';
+  const el = document.getElementById('ziwu-indicator');
+  el.querySelector('.zi-dot').style.background = mc;
+  el.querySelector('.zi-text').textContent = `${active.organ}经当令`;
+  el.querySelector('.zi-time').textContent = `${active.dizhi} (${active.start}:00-${active.end}:00)`;
+}
+
+function openZiwu() {
+  const active = getActiveZiwu();
+  const body = document.getElementById('ziwu-body');
+  let html = '<table class="ziwu-table"><thead><tr><th>时辰</th><th>时间</th><th>经络</th><th>脏腑</th></tr></thead><tbody>';
+  ZIWU.forEach(z => {
+    const mc = M[z.code]?.css || '#888';
+    const isActive = z.code === active.code;
+    const endStr = z.end < 10 ? '0'+z.end : z.end;
+    const startStr = z.start < 10 ? '0'+z.start : z.start;
+    html += `<tr class="${isActive?'active-row':''}">
+      <td class="zt-time">${z.dizhi}</td>
+      <td class="zt-time">${startStr}:00-${endStr}:00</td>
+      <td class="zt-name"><span class="zt-dot" style="background:${mc}"></span>${M[z.code]?.full||z.name}</td>
+      <td class="zt-organ">${z.organ}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  body.innerHTML = html;
+  document.getElementById('ziwu-overlay').classList.add('open');
+}
+
+window.closeZiwu = () => document.getElementById('ziwu-overlay').classList.remove('open');
+document.getElementById('ziwu-overlay').addEventListener('click', e => { if(e.target.id==='ziwu-overlay') closeZiwu(); });
+
+// ===== EXAM MODE =====
+function startExam() {
+  if (!examData.length) { alert('考试数据加载失败'); return; }
+  // Pick 10 random questions
+  const shuffled = [...examData].sort(() => Math.random() - 0.5);
+  examQuestions = shuffled.slice(0, 10);
+  examIndex = 0;
+  examScore = 0;
+  examActive = true;
+
+  // Reset all point visibility
+  currentFilter = 'all';
+  filterMeridian('all');
+  document.querySelectorAll('.mt').forEach(t => t.classList.remove('active'));
+  document.querySelector('.mt[data-m="all"]')?.classList.add('active');
+
+  document.getElementById('exam-overlay').classList.add('open');
+  document.getElementById('exam-result').classList.remove('show');
+  closePanel();
+  closeFav();
+
+  showExamQuestion();
+}
+
+function showExamQuestion() {
+  if (examIndex >= examQuestions.length) {
+    endExam();
+    return;
+  }
+  const q = examQuestions[examIndex];
+  // Extract point name from title like "请定位穴位(中府)"
+  const nameMatch = q.t.match(/[（(]([^）)]+)[）)]/);
+  const pointName = nameMatch ? nameMatch[1] : q.t;
+
+  const bar = document.getElementById('exam-bar');
+  bar.querySelector('.eq-question').textContent = `请点击穴位：${pointName}`;
+  bar.querySelector('.eq-score').textContent = `得分: ${examScore}`;
+  bar.querySelector('.eq-progress').textContent = `${examIndex + 1}/10`;
+}
+
+function handleExamClick(mesh) {
+  if (!examActive) return;
+  const q = examQuestions[examIndex];
+  const clickedCode = mesh.userData.id.replace('_R', '');
+  const flash = document.getElementById('exam-flash');
+
+  if (clickedCode === q.a) {
+    // Correct
+    examScore += 10;
+    flash.className = 'exam-flash green';
+    setTimeout(() => flash.className = 'exam-flash', 400);
+    examIndex++;
+    setTimeout(showExamQuestion, 500);
+  } else {
+    // Wrong - highlight correct answer
+    flash.className = 'exam-flash red';
+    setTimeout(() => flash.className = 'exam-flash', 400);
+
+    // Highlight correct point
+    const correctMesh = pointMeshes.find(m => m.userData.id === q.a);
+    if (correctMesh) {
+      correctMesh.material.color.set('#C8A058');
+      correctMesh.scale.setScalar(2);
+      setTimeout(() => {
+        correctMesh.material.color.set(M[correctMesh.userData.m]?.color || '#888');
+        correctMesh.scale.setScalar(1);
+      }, 1500);
+    }
+    examIndex++;
+    setTimeout(showExamQuestion, 1600);
+  }
+}
+
+function endExam() {
+  examActive = false;
+  document.getElementById('exam-overlay').classList.remove('open');
+  const result = document.getElementById('exam-result');
+  result.querySelector('.er-score').textContent = `${examScore}/100`;
+  result.classList.add('show');
+}
+
+window.exitExam = () => {
+  examActive = false;
+  document.getElementById('exam-overlay').classList.remove('open');
+  document.getElementById('exam-result').classList.remove('show');
+};
+
+// ===== ANIMATION LOOP =====
+function animate() {
+  requestAnimationFrame(animate);
+
+  if (introAnim) {
+    const t = clock.getElapsedTime();
+    if (t < 3) {
+      const p = t / 3;
+      camera.position.set(
+        120 * Math.sin(p * Math.PI * 0.5),
+        40 - p * 20,
+        200 - p * 80
+      );
+      controls.target.set(0, 10, 0);
+    } else {
+      introAnim = false;
+    }
+  }
+
+  // NaN recovery — if camera position becomes NaN, reset immediately
+  if (isNaN(camera.position.x) || isNaN(camera.position.y) || isNaN(camera.position.z)) {
+    camera.position.set(0, 20, 120);
+    controls.target.set(0, 10, 0);
+    animating = false;
+    targetPos = null;
+  }
+
+  if (animating && targetPos) {
+    camera.position.lerp(targetPos, 0.06);
+    controls.target.lerp(targetLook, 0.06);
+    if (camera.position.distanceTo(targetPos) < 0.3) animating = false;
+  }
+
+  controls.autoRotate = autoRotate && !animating && !introAnim;
+
+  // Update shared flow time (always, since tubes read it when visible)
+  sharedFlowTime.value = clock.getElapsedTime();
+
+  controls.update();
+  renderer.render(scene, camera);
+
+  // Draw point labels when a specific meridian is selected
+  const dpr = Math.min(devicePixelRatio, 2);
+  const cw = labelCanvas.width, ch = labelCanvas.height;
+  labelCtx.clearRect(0, 0, cw, ch);
+  const labelMeridian = currentFilter !== 'all' ? currentFilter : (selectedPt ? selectedPt.userData.m : null);
+  if (labelMeridian) {
+    labelCtx.save();
+    labelCtx.scale(dpr, dpr);
+    labelCtx.font = '12px "Noto Serif SC","PingFang SC",serif';
+    labelCtx.textBaseline = 'middle';
+    const hw = innerWidth / 2, hh = innerHeight / 2;
+    const camPos = camera.position;
+    const proj = new THREE.Vector3();
+    const outward = new THREE.Vector3();
+    const viewDir = new THREE.Vector3();
+    // Collect visible label positions, then draw with overlap avoidance
+    const labels = [];
+    pointMeshes.forEach(mesh => {
+      if (!mesh.visible) return;
+      const pt = mesh.userData;
+      if (!pt || pt.m !== labelMeridian) return;
+      outward.set(pt.x, 0, pt.z).normalize();
+      viewDir.set(pt.x - camPos.x, pt.y - camPos.y, pt.z - camPos.z).normalize();
+      if (outward.dot(viewDir) > 0.1) return;
+      proj.set(pt.x, pt.y, pt.z).project(camera);
+      if (proj.z > 1 || proj.z < -1) return;
+      const sx = proj.x * hw + hw;
+      const sy = -proj.y * hh + hh;
+      if (sx < -30 || sx > innerWidth + 30 || sy < -10 || sy > innerHeight + 10) return;
+      labels.push({ pt, sx, sy });
+    });
+
+    // Sort by screen-Y so overlap nudging works top-down
+    labels.sort((a, b) => a.sy - b.sy);
+
+    // Draw labels with overlap avoidance
+    const placedRects = [];
+    labels.forEach(({ pt, sx, sy }) => {
+      const mInfo = M[pt.m];
+      const mColor = mInfo ? mInfo.css : '#3A3228';
+
+      // Measure text
+      labelCtx.font = '600 12px "Noto Serif SC","PingFang SC",serif';
+      const nameW = labelCtx.measureText(pt.name).width;
+      let pinyinW = 0;
+      if (pt.pinyin) {
+        labelCtx.font = '10px "Noto Serif SC","PingFang SC",sans-serif';
+        pinyinW = labelCtx.measureText(pt.pinyin).width;
+      }
+      const pillW = Math.max(nameW, pinyinW) + 16;
+      const pillH = pt.pinyin ? 30 : 20;
+
+      // Initial label position
+      let lx = sx + 16;
+      let ly = sy - 10;
+
+      // Nudge down if overlapping a previously placed label
+      for (let i = 0; i < placedRects.length; i++) {
+        const r = placedRects[i];
+        if (lx < r.x + r.w + 4 && lx + pillW > r.x - 4 &&
+            ly < r.y + r.h + 2 && ly + pillH > r.y - 2) {
+          ly = r.y + r.h + 3;
+        }
+      }
+      placedRects.push({ x: lx, y: ly, w: pillW, h: pillH });
+
+      // Connector line
+      labelCtx.beginPath();
+      labelCtx.moveTo(sx + 4, sy);
+      labelCtx.lineTo(lx, ly + pillH / 2);
+      labelCtx.strokeStyle = 'rgba(60,50,40,0.18)';
+      labelCtx.lineWidth = 0.8;
+      labelCtx.stroke();
+
+      // Name text
+      const textX = lx + 2;
+      const textY = ly;
+      labelCtx.font = '600 12px "Noto Serif SC","PingFang SC",serif';
+      labelCtx.fillStyle = '#2A2420';
+      if (pt.pinyin) {
+        labelCtx.fillText(pt.name, textX, textY + 4);
+        labelCtx.font = '9px "Noto Serif SC","PingFang SC",sans-serif';
+        labelCtx.fillStyle = 'rgba(100,90,80,0.45)';
+        labelCtx.fillText(pt.pinyin, textX, textY + 16);
+      } else {
+        labelCtx.fillText(pt.name, textX, textY + 4);
+      }
+    });
+    labelCtx.restore();
+  }
+}
+</script>
+</body>
+</html>
