@@ -1127,28 +1127,38 @@ function selectPoint(mesh) {
     offY = 5;
     offZ = camDist;
   } else if (pt.y > 60 && radialLen < 15) {
-    // Head top / crown / back of head — view from above-front
-    offX = 0;
-    offY = 35;
-    offZ = 30;
+    // Head top / crown / back of head — radial from head center
+    const hcX = 0, hcY = 63, hcZ = -5;
+    const hdX = pt.x - hcX, hdY = pt.y - hcY, hdZ = pt.z - hcZ;
+    const hdR = Math.sqrt(hdX * hdX + hdY * hdY + hdZ * hdZ) || 1;
+    offX = (hdX / hdR) * camDist * 0.6;
+    offY = (hdY / hdR) * camDist * 0.6 + 15;
+    offZ = (hdZ / hdR) * camDist * 0.6;
   } else if (pt.y > 50) {
-    // Head sides / neck — front-neck points get frontal view, others radial
-    if (radialLen < 6) {
-      // Near-midline (front neck like CV23, back neck like GV15)
-      offX = 0;
+    // Head sides / neck
+    if (absX < 6 && radialLen < 6) {
+      // Near-midline (front neck like CV23/CV24, back neck like GV15)
+      offX = pt.x * 3;
       offY = 10;
       offZ = pt.z >= -3 ? camDist : -camDist;
     } else {
-      offX = rdX * camDist * 0.6;
-      offY = 15;
-      offZ = rdZ * camDist * 0.6;
-      if (pt.z > -5) offZ += 25; else offZ -= 20;
+      // Lateral head/neck — radial from head center for y>55, else side view
+      const hcX = 0, hcY = 63, hcZ = -5;
+      const hdX = pt.x - hcX, hdZ = pt.z - hcZ;
+      const hdR = Math.sqrt(hdX * hdX + hdZ * hdZ) || 1;
+      offX = (hdX / hdR) * camDist * 0.7;
+      offY = 12;
+      offZ = (hdZ / hdR) * camDist * 0.7;
     }
   } else if (absX > 25) {
-    // Arms / hands — view from the side the limb is on
-    offX = rdX * camDist;
+    // Arms / hands — radial from arm center axis
+    const armCz = -3;
+    const armDx = pt.x;  // from body center
+    const armDz = pt.z - armCz;
+    const armR = Math.sqrt(armDx * armDx + armDz * armDz) || 1;
+    offX = (armDx / armR) * camDist;
     offY = 8;
-    offZ = rdZ * camDist * 0.3 + 25;
+    offZ = (armDz / armR) * camDist * 0.5;
   } else if (pt.y < -80) {
     // Feet / ankles — radial from foot/ankle center axis
     const legCx = pt.x > 0 ? 6 : -6;
@@ -1167,17 +1177,17 @@ function selectPoint(mesh) {
     offX = (legDx / legR) * 40;
     offY = 5;
     offZ = (legDz / legR) * 40;
-  } else if (pt.z > -10 && (radialLen < 12 || (radialLen < 18 && pt.z > -5))) {
-    // Front / lateral torso points — view from front
-    offX = (pt.x > 0 ? 1 : pt.x < 0 ? -1 : 0) * 15;
-    offY = 5;
-    offZ = camDist;
   } else {
-    // Torso / upper legs / back — radial outward, biased forward for side points
-    offX = rdX * camDist;
+    // Torso / upper legs / back — radial from body center axis
+    const tCx = 0, tCz = -4;
+    // For upper leg points, use leg center
+    const cX = (pt.y < -10) ? (pt.x > 0 ? 6 : -6) : tCx;
+    const cZ = (pt.y < -10) ? -7 : tCz;
+    const tDx = pt.x - cX, tDz = pt.z - cZ;
+    const tR = Math.sqrt(tDx * tDx + tDz * tDz) || 1;
+    offX = (tDx / tR) * camDist;
     offY = 5;
-    offZ = rdZ * camDist;
-    if (pt.z > -12 && absX > 8) offZ += 20;
+    offZ = (tDz / tR) * camDist;
   }
 
   targetPos = new THREE.Vector3(pt.x + offX, pt.y + offY, pt.z + offZ);
