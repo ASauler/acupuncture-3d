@@ -1626,10 +1626,15 @@ function animate() {
   if (labelMeridian) {
     labelCtx.save();
     labelCtx.scale(dpr, dpr);
-    labelCtx.font = '12px "Noto Serif SC","PingFang SC",serif';
     labelCtx.textBaseline = 'middle';
     const hw = innerWidth / 2, hh = innerHeight / 2;
     const camPos = camera.position;
+    const camDist = camPos.distanceTo(controls.target);
+    // Scale labels based on zoom: 1.0 at dist=80, shrink when farther, grow when closer
+    const labelScale = Math.min(1.4, Math.max(0.5, 80 / camDist));
+    const nameFontSize = Math.round(12 * labelScale);
+    const pinyinFontSize = Math.round(9 * labelScale);
+    const offsetX = Math.round(10 * labelScale);
     const proj = new THREE.Vector3();
     const normal = new THREE.Vector3();
     const viewDir = new THREE.Vector3();
@@ -1668,47 +1673,47 @@ function animate() {
 
     // Draw labels with overlap avoidance
     const placedRects = [];
+    const nameFont = `600 ${nameFontSize}px "Noto Serif SC","PingFang SC",serif`;
+    const pinyinFont = `${pinyinFontSize}px "Noto Serif SC","PingFang SC",sans-serif`;
+    const gap = Math.round(2 * labelScale);
     labels.forEach(({ pt, sx, sy }) => {
-      const mInfo = M[pt.m];
-      const mColor = mInfo ? mInfo.css : '#3A3228';
-
       // Measure text
-      labelCtx.font = '600 12px "Noto Serif SC","PingFang SC",serif';
+      labelCtx.font = nameFont;
       const nameW = labelCtx.measureText(pt.name).width;
       let pinyinW = 0;
       if (pt.pinyin) {
-        labelCtx.font = '10px "Noto Serif SC","PingFang SC",sans-serif';
+        labelCtx.font = pinyinFont;
         pinyinW = labelCtx.measureText(pt.pinyin).width;
       }
-      const pillW = Math.max(nameW, pinyinW) + 16;
-      const pillH = pt.pinyin ? 30 : 20;
+      const pillW = Math.max(nameW, pinyinW) + Math.round(8 * labelScale);
+      const pillH = pt.pinyin ? Math.round(26 * labelScale) : Math.round(16 * labelScale);
 
-      // Initial label position
-      let lx = sx + 16;
-      let ly = sy - 10;
+      // Initial label position — close to dot, scale offset with zoom
+      let lx = sx + offsetX;
+      let ly = sy - Math.round(6 * labelScale);
 
       // Nudge down if overlapping a previously placed label
       for (let i = 0; i < placedRects.length; i++) {
         const r = placedRects[i];
-        if (lx < r.x + r.w + 4 && lx + pillW > r.x - 4 &&
-            ly < r.y + r.h + 2 && ly + pillH > r.y - 2) {
-          ly = r.y + r.h + 3;
+        if (lx < r.x + r.w + gap && lx + pillW > r.x - gap &&
+            ly < r.y + r.h + gap && ly + pillH > r.y - gap) {
+          ly = r.y + r.h + gap;
         }
       }
       placedRects.push({ x: lx, y: ly, w: pillW, h: pillH });
 
       // Name text
-      const textX = lx + 2;
+      const textX = lx;
       const textY = ly;
-      labelCtx.font = '600 12px "Noto Serif SC","PingFang SC",serif';
+      labelCtx.font = nameFont;
       labelCtx.fillStyle = '#2A2420';
       if (pt.pinyin) {
-        labelCtx.fillText(pt.name, textX, textY + 4);
-        labelCtx.font = '9px "Noto Serif SC","PingFang SC",sans-serif';
+        labelCtx.fillText(pt.name, textX, textY + nameFontSize * 0.35);
+        labelCtx.font = pinyinFont;
         labelCtx.fillStyle = 'rgba(100,90,80,0.45)';
-        labelCtx.fillText(pt.pinyin, textX, textY + 16);
+        labelCtx.fillText(pt.pinyin, textX, textY + nameFontSize + pinyinFontSize * 0.3);
       } else {
-        labelCtx.fillText(pt.name, textX, textY + 4);
+        labelCtx.fillText(pt.name, textX, textY + nameFontSize * 0.35);
       }
     });
     labelCtx.restore();
