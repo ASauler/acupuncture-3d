@@ -234,6 +234,8 @@ canvas{display:block}
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {DRACOLoader} from 'three/addons/loaders/DRACOLoader.js';
 import {mergeVertices} from 'three/addons/utils/BufferGeometryUtils.js';
 
 // ===== MERIDIAN CONFIG =====
@@ -436,12 +438,12 @@ async function main() {
   const data = await loadAllData();
   POINTS = data.POINTS;
   DB = data.DB;
-  init();
+  await init();
   animate();
 }
 main();
 
-function init() {
+async function init() {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0xF5F0E6);
 
@@ -500,7 +502,7 @@ function init() {
   raycaster = new THREE.Raycaster();
   mouse = new THREE.Vector2();
 
-  buildBody();
+  await buildBody();
   createPoints();
   createFlowTrails();
   buildTabs();
@@ -539,7 +541,7 @@ function smoothNormalsAcrossSeams(geometry) {
 }
 
 // ===== LOAD BODY MODEL =====
-function buildBody() {
+async function buildBody() {
   const texLoader = new THREE.TextureLoader();
   const albedoTex = texLoader.load('model/T_Male_PF_Albedo.jpg');
   const normalTex = texLoader.load('model/T_Male_PF_N.jpg');
@@ -569,8 +571,18 @@ function buildBody() {
     );
   };
 
-  const loader = new OBJLoader();
-  loader.load('model/body.obj', (obj) => {
+  // Draco-compressed GLB (62KB vs 4.7MB OBJ)
+  const dracoLoader = new DRACOLoader();
+  dracoLoader.setDecoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/');
+  const gltfLoader = new GLTFLoader();
+  gltfLoader.setDRACOLoader(dracoLoader);
+
+  loadProgress.style.width = '50%';
+  loading.querySelector('p').textContent = '加载模型...';
+
+  try {
+    const bodyGltf = await gltfLoader.loadAsync('model/body_draco.glb');
+    const obj = bodyGltf.scene;
     obj.traverse(ch => {
       if (ch.isMesh) {
         ch.geometry = mergeVertices(ch.geometry);
@@ -613,37 +625,30 @@ function buildBody() {
     });
     scene.add(outlineObj);
 
-    // Load eyes
+    // Load eyes (Draco GLB — 4.4KB)
     const eyeTex = texLoader.load('model/T_PF_Eyes_albedo.jpg');
     eyeTex.colorSpace = THREE.SRGBColorSpace;
     const eyeMat = new THREE.MeshPhysicalMaterial({
       map: eyeTex, roughness: 0.3, metalness: 0.0,
       clearcoat: 0.6, clearcoatRoughness: 0.1, side: THREE.DoubleSide
     });
-    loader.load('model/eyes.obj', (eyeObj) => {
-      eyeObj.traverse(ch => {
-        if (ch.isMesh) {
-          ch.geometry = mergeVertices(ch.geometry);
-          ch.geometry.computeVertexNormals();
-          ch.material = eyeMat;
-        }
-      });
-      eyeObj.scale.set(95.3, 95.3, 95.3);
-      eyeObj.position.y = -11.2;
-      eyesMesh = eyeObj;
-      scene.add(eyeObj);
+    const eyeGltf = await gltfLoader.loadAsync('model/eyes_draco.glb');
+    const eyeObj = eyeGltf.scene;
+    eyeObj.traverse(ch => {
+      if (ch.isMesh) {
+        ch.geometry = mergeVertices(ch.geometry);
+        ch.geometry.computeVertexNormals();
+        ch.material = eyeMat;
+      }
     });
+    eyeObj.scale.set(95.3, 95.3, 95.3);
+    eyeObj.position.y = -11.2;
+    eyesMesh = eyeObj;
+    scene.add(eyeObj);
 
     loading.classList.add('hide');
-  },
-  (xhr) => {
-    if (xhr.lengthComputable) {
-      const pct = Math.round(xhr.loaded / xhr.total * 100);
-      loading.querySelector('p').textContent = `加载模型 ${pct}%`;
-      loadProgress.style.width = (40 + pct * 0.6) + '%';
-    }
-  },
-  () => {
+  } catch(e) {
+    console.warn('GLB load failed, fallback to capsule:', e);
     const geo = new THREE.CapsuleGeometry(6, 80, 16, 32);
     const mat = new THREE.MeshPhongMaterial({color:0xd4b896, transparent:true, opacity:0.85});
     const body = new THREE.Mesh(geo, mat);
@@ -651,7 +656,7 @@ function buildBody() {
     bodyMesh = body;
     scene.add(body);
     loading.classList.add('hide');
-  });
+  }
 }
 
 // ===== ACUPOINTS =====
