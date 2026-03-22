@@ -1665,11 +1665,14 @@ function animate() {
         } else {
           normal.set(pt.x, 0, pt.z + 4);
         }
-        const nLen = normal.length();
-        if (nLen > 0.01) normal.divideScalar(nLen); else normal.set(0, 0, 1);
-        viewDir.set(pt.x - camPos.x, pt.y - camPos.y, pt.z - camPos.z).normalize();
-        if (normal.dot(viewDir) > 0.3) return;
+      } else {
+        // Arms — radial from arm center axis (z ≈ -3)
+        normal.set(0, 0, pt.z + 3);
       }
+      const nLen = normal.length();
+      if (nLen > 0.01) normal.divideScalar(nLen); else normal.set(0, 0, 1);
+      viewDir.set(pt.x - camPos.x, pt.y - camPos.y, pt.z - camPos.z).normalize();
+      if (normal.dot(viewDir) > 0.3) return;
       proj.set(pt.x, pt.y, pt.z).project(camera);
       if (proj.z > 1 || proj.z < -1) return;
       const sx = proj.x * hw + hw;

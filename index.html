@@ -236,7 +236,6 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {DRACOLoader} from 'three/addons/loaders/DRACOLoader.js';
-import {mergeVertices} from 'three/addons/utils/BufferGeometryUtils.js';
 
 // ===== MERIDIAN CONFIG =====
 const M={
@@ -585,9 +584,7 @@ async function buildBody() {
     const obj = bodyGltf.scene;
     obj.traverse(ch => {
       if (ch.isMesh) {
-        ch.geometry = mergeVertices(ch.geometry);
         ch.geometry.computeVertexNormals();
-        smoothNormalsAcrossSeams(ch.geometry);
         ch.material = skinMat;
       }
     });
@@ -596,7 +593,7 @@ async function buildBody() {
     bodyMesh = obj;
     scene.add(obj);
 
-    // Ink-stroke outline — inverted hull method
+    // Ink-stroke outline — inverted hull method (deferred to after first render)
     const outlineMat = new THREE.ShaderMaterial({
       vertexShader: `
         varying float vEdge;
@@ -619,11 +616,16 @@ async function buildBody() {
       transparent: true,
       depthWrite: false
     });
-    outlineObj = obj.clone(true);
-    outlineObj.traverse(ch => {
-      if (ch.isMesh) ch.material = outlineMat;
-    });
-    scene.add(outlineObj);
+    setTimeout(() => {
+      obj.traverse(ch => {
+        if (ch.isMesh) smoothNormalsAcrossSeams(ch.geometry);
+      });
+      outlineObj = obj.clone(true);
+      outlineObj.traverse(ch => {
+        if (ch.isMesh) ch.material = outlineMat;
+      });
+      scene.add(outlineObj);
+    }, 0);
 
     // Load eyes (Draco GLB — 4.4KB)
     const eyeTex = texLoader.load('model/T_PF_Eyes_albedo.jpg');
@@ -636,7 +638,6 @@ async function buildBody() {
     const eyeObj = eyeGltf.scene;
     eyeObj.traverse(ch => {
       if (ch.isMesh) {
-        ch.geometry = mergeVertices(ch.geometry);
         ch.geometry.computeVertexNormals();
         ch.material = eyeMat;
       }
@@ -661,10 +662,10 @@ async function buildBody() {
 
 // ===== ACUPOINTS =====
 function createPoints() {
-  const geo = new THREE.SphereGeometry(0.55, 16, 16);
+  const geo = new THREE.SphereGeometry(0.55, 10, 10);
 
   // Fresnel ring geometry & per-meridian materials
-  const ringGeo = new THREE.SphereGeometry(0.65, 16, 16);
+  const ringGeo = new THREE.SphereGeometry(0.65, 10, 10);
   const ringMats = {};
   Object.entries(M).forEach(([k, v]) => {
     ringMats[k] = new THREE.ShaderMaterial({
